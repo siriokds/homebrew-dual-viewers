@@ -11,7 +11,7 @@ class DualMd4c < Formula
   # legale. L'unico motivo di questo modulo e' togliere l'header di MD4C
   # dalla compilazione di Dual — Dual parla solo con dual_viewer_plugin.h.
   url "https://github.com/siriokds/homebrew-dual-viewers.git", branch: "main"
-  version "1.0.0"
+  version "1.0.1"
   license "MIT"
 
   # Stessa convenzione degli altri moduli dual-*: vive sotto

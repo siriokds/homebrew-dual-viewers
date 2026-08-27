@@ -39,6 +39,9 @@ int DUAL_VIEWER_PLUGIN_ABI md4c_can_handle(void*, const char* path_hint) {
     return 0;
 }
 
+// MD_DIALECT_GITHUB: tabelle, strikethrough, task list e autolink permissivi.
+// Senza questo flag md4c parsa CommonMark puro e una tabella GFM diventa un
+// paragrafo unico di testo con le pipe in mezzo.
 // md_html() e' basata su callback (chunk di output ripetuti), non su un
 // buffer singolo come cmark — l'accumulo in una std::string e' compito di
 // questo adattatore, l'ABI non lo sa e non le importa.
@@ -53,7 +56,7 @@ int DUAL_VIEWER_PLUGIN_ABI md4c_render(void* self,
     auto* s = static_cast<md4c_plugin_state_t*>(self);
     std::string accum;
     const int rc = md_html(content, static_cast<MD_SIZE>(content_len), OnChunk, &accum,
-                            0, MD_HTML_FLAG_SKIP_UTF8_BOM);
+                            MD_DIALECT_GITHUB, MD_HTML_FLAG_SKIP_UTF8_BOM);
     if(rc != 0) {
         snprintf(s->last_error, sizeof(s->last_error), "md_html() failed");
         return 0;
