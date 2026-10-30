@@ -15,6 +15,14 @@ class DualWebp < Formula
   version "1.0.0"
   license "BSD-3-Clause"
 
+  # Il plugin gia' compilato (bottle, docs/bottle.md di Dual Rust): chi
+  # installa non compila. Senza bottle per il suo sistema, si compila come prima.
+  bottle do
+    root_url "https://github.com/siriokds/homebrew-dual-viewers/releases/download/bottles-2026-10-31"
+    rebuild 1
+    sha256 cellar: :any, arm64_golden_gate: "b330426bdb137a8403dcc3c0b047ef6376d997b7241794c89da7364f656b02cb"
+  end
+
   # Stessa convenzione degli altri moduli dual-*: vive sotto
   # /opt/homebrew/opt/dual-<nome>/lib/, che e' cio' che il loader lato Dual
   # scandisce.
