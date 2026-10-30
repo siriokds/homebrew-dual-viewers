@@ -1,0 +1,47 @@
+# I colori del codice per il visualizzatore di testo di Dual, con tree-sitter:
+# un plugin dei visualizzatori (ABI 1.2, tipo SYNTAX_HIGHLIGHT,
+# `dual_viewer_plugin.h` qui accanto). Sul Mac e' la dylib che Dual apre;
+# su Windows e Linux, dove i plugin non ci sono ancora, Dual Rust collega lo
+# stesso crate dentro l'eseguibile (senza la feature `plugin`).
+[package]
+name = "dual-syntax"
+version = "1.0.0"
+edition = "2024"
+license = "GPL-3.0-or-later"
+publish = false
+
+[lib]
+name = "dual_syntax_plugin"
+crate-type = ["cdylib", "rlib"]
+
+[features]
+default = ["plugin"]
+# Il simbolo `dual_viewer_plugin_load` e le strutture dell'ABI.
+plugin = []
+
+[dependencies]
+# tree-sitter e le grammatiche ufficiali (MIT), le stesse versioni che Dual
+# Rust usava dentro l'eseguibile (D164 A, D160 A, fase 1 del 24/10/2026).
+tree-sitter = "0.25"
+tree-sitter-highlight = "0.25"
+tree-sitter-c = "0.24.1"
+tree-sitter-cpp = "0.23.4"
+tree-sitter-c-sharp = "0.23.5"
+tree-sitter-rust = "0.24.2"
+tree-sitter-python = "0.25.0"
+tree-sitter-javascript = "0.25.0"
+tree-sitter-html = "0.23.2"
+tree-sitter-css = "0.25.0"
+tree-sitter-php = "0.25.1"
+tree-sitter-sequel = "0.3.11"
+tree-sitter-md = "0.5.3"
+tree-sitter-toml-ng = "0.7.0"
+tree-sitter-bash = "0.25.1"
+tree-sitter-lua = "0.5.0"
+tree-sitter-typescript = "0.23.2"
+tree-sitter-json = "0.24.8"
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = "debuginfo"
