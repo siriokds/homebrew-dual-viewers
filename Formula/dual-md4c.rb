@@ -14,6 +14,16 @@ class DualMd4c < Formula
   version "1.0.1"
   license "MIT"
 
+  # Il plugin gia' compilato (bottle), fatto sul Mac con `brew install
+  # --build-bottle` e `brew bottle`, allegato alla release qui sotto: chi
+  # installa non compila niente. Senza bottle per il suo sistema, Homebrew
+  # compila dal sorgente come prima.
+  bottle do
+    root_url "https://github.com/siriokds/homebrew-dual-viewers/releases/download/dual-md4c-1.0.1"
+    rebuild 1
+    sha256 cellar: :any, arm64_golden_gate: "a13ac33d4f140abf2dc425108e4dd4e7f2070aece3a246ca2554a1f9166aeb56"
+  end
+
   # Stessa convenzione degli altri moduli dual-*: vive sotto
   # /opt/homebrew/opt/dual-<nome>/lib/, che e' cio' che il loader lato Dual
   # scandisce.
