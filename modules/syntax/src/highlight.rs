@@ -16,6 +16,9 @@
 //! dei blocchi ``` nei linguaggi qui sopra). Poi (utente, 24/10/2026): TOML,
 //! Bash, Lua, TypeScript (anche TSX) e JSON, anche per i notebook di
 //! Jupyter (`.ipynb`, che sono JSON).
+//!
+//! Files known by their whole name, any case: `Makefile`, `Dockerfile`
+//! (`RUN` lines coloured as Bash) and `CMakeLists.txt`.
 
 use std::sync::OnceLock;
 
@@ -159,9 +162,12 @@ pub enum Language {
     /// TypeScript con i tag JSX.
     Tsx,
     Json,
+    Make,
+    Dockerfile,
+    CMake,
 }
 
-const ALL: [Language; 18] = [
+const ALL: [Language; 21] = [
     Language::C,
     Language::Cpp,
     Language::CSharp,
@@ -180,6 +186,9 @@ const ALL: [Language; 18] = [
     Language::TypeScript,
     Language::Tsx,
     Language::Json,
+    Language::Make,
+    Language::Dockerfile,
+    Language::CMake,
 ];
 
 /// Il linguaggio di un file dalla sua estensione (senza punto, qualunque
@@ -203,6 +212,10 @@ pub fn language_for(extension: &str) -> Option<Language> {
         "ts" | "mts" | "cts" => Language::TypeScript,
         "tsx" => Language::Tsx,
         "json" | "jsonc" | "ipynb" | "geojson" => Language::Json,
+        // Whole file names (Dual asks with the name first).
+        "makefile" => Language::Make,
+        "dockerfile" => Language::Dockerfile,
+        "cmakelists.txt" => Language::CMake,
         _ => return None,
     })
 }
@@ -229,6 +242,9 @@ fn language_named(name: &str) -> Option<Language> {
         "typescript" | "ts" => Language::TypeScript,
         "tsx" => Language::Tsx,
         "json" | "jsonc" => Language::Json,
+        "make" | "makefile" => Language::Make,
+        "dockerfile" => Language::Dockerfile,
+        "cmake" => Language::CMake,
         _ => return None,
     })
 }
@@ -263,6 +279,22 @@ const MARKDOWN_INLINE_MORE: &str = r#"
 /// stringhe, e con tree-sitter-highlight 0.25 vince l'ultima; ripetuta in
 /// fondo, vince lei.
 const JSON_KEYS: &str = "(pair key: (_) @string.special.key)\n";
+
+/// The rules written for Neovim, made plain tree-sitter:
+/// - `@comment @spell`: the last capture wins and `spell` has no colour, so
+///   the comments would stay plain;
+/// - `#lua-match?` is unknown here and ignored, so its rule would match
+///   every first comment of a file (CMake: `#!/` lines only), or every
+///   argument (CMake: upper-case words only); `#match?` takes the same
+///   pattern once the Lua classes `%u` and `%d` become `A-Z` and `0-9`.
+fn for_tree_sitter(query: &str) -> String {
+    query
+        .replace(" @spell", "")
+        .replace(" @nospell", "")
+        .replace("#lua-match?", "#match?")
+        .replace("%u", "A-Z")
+        .replace("%d", "0-9")
+}
 
 /// La grammatica e le sue regole (colori, blocchi annidati, nomi locali).
 fn build(language: Language) -> Result<HighlightConfiguration, String> {
@@ -400,6 +432,26 @@ fn build(language: Language) -> Result<HighlightConfiguration, String> {
                 "",
                 "",
             ),
+            // `$(wildcard …)` and the other built-in functions of make are
+            // `@keyword.function`, which elsewhere is the `function` keyword.
+            Make => (
+                tree_sitter_make::LANGUAGE.into(),
+                tree_sitter_make::HIGHLIGHTS_QUERY.replace("@keyword.function", "@function"),
+                "",
+                "",
+            ),
+            Dockerfile => (
+                tree_sitter_containerfile::LANGUAGE.into(),
+                for_tree_sitter(tree_sitter_containerfile::HIGHLIGHTS_QUERY),
+                tree_sitter_containerfile::INJECTIONS_QUERY,
+                "",
+            ),
+            CMake => (
+                tree_sitter_cmake::LANGUAGE.into(),
+                for_tree_sitter(tree_sitter_cmake::HIGHLIGHTS_QUERY),
+                "",
+                "",
+            ),
         };
     let mut config = HighlightConfiguration::new(grammar, format!("{language:?}"), &highlights, injections, locals)
         .map_err(|e| format!("{language:?}: {e:?}"))?;
@@ -491,6 +543,42 @@ mod tests {
         assert_eq!(language_for("md"), Some(Language::Markdown));
         assert_eq!(language_for("txt"), None);
         assert_eq!(language_for(""), None);
+    }
+
+    /// Makefile, Dockerfile and CMakeLists.txt by their whole name, any case.
+    #[test]
+    fn files_by_name() {
+        assert_eq!(language_for("Makefile"), Some(Language::Make));
+        assert_eq!(language_for("MAKEFILE"), Some(Language::Make));
+        assert_eq!(language_for("dockerfile"), Some(Language::Dockerfile));
+        assert_eq!(language_for("CMakeLists.txt"), Some(Language::CMake));
+        assert_eq!(language_for("cmakelists.TXT"), Some(Language::CMake));
+        assert_eq!(language_for("Makefile.am"), None);
+        assert_eq!(language_for("notes.txt"), None);
+    }
+
+    #[test]
+    fn make_dockerfile_cmake() {
+        let make = "# nota\nCC ?= clang\nSRC = $(wildcard src/*.c)\nifeq ($(OS),Windows_NT)\nendif\n";
+        assert_eq!(role_of(Language::Make, make, "# nota"), Role::Comment);
+        assert_eq!(role_of(Language::Make, make, "wildcard"), Role::Function);
+        assert_eq!(role_of(Language::Make, make, "ifeq"), Role::Control);
+        assert_eq!(role_of(Language::Make, make, "clang"), Role::String);
+        let docker = "# nota\nFROM rust:1.85 AS build\nENV RUST_LOG=info\nRUN cargo build --release\nEXPOSE 8080\n";
+        assert_eq!(role_of(Language::Dockerfile, docker, "# nota"), Role::Comment);
+        assert_eq!(role_of(Language::Dockerfile, docker, "FROM"), Role::Keyword);
+        assert_eq!(role_of(Language::Dockerfile, docker, "RUST_LOG"), Role::Variable);
+        // The RUN line goes to the Bash grammar.
+        assert_eq!(role_of(Language::Dockerfile, docker, "cargo"), Role::Function);
+        assert_eq!(role_of(Language::Dockerfile, docker, "8080"), Role::Number);
+        let cmake = "# nota\nproject(Dual VERSION 2.5.0)\noption(T \"Tests\" ON)\nif(APPLE)\n  set(X ${Y})\nendif()\n";
+        assert_eq!(role_of(Language::CMake, cmake, "# nota"), Role::Comment);
+        assert_eq!(role_of(Language::CMake, cmake, "project"), Role::Function);
+        assert_eq!(role_of(Language::CMake, cmake, "VERSION"), Role::Constant);
+        assert_eq!(role_of(Language::CMake, cmake, "Dual"), Role::Default);
+        assert_eq!(role_of(Language::CMake, cmake, "\"Tests\""), Role::String);
+        assert_eq!(role_of(Language::CMake, cmake, "if("), Role::Control);
+        assert_eq!(role_of(Language::CMake, cmake, "Y"), Role::Variable);
     }
 
     #[test]

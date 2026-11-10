@@ -13,12 +13,14 @@ pub mod highlight;
 mod abi;
 
 /// Le estensioni che si colorano (senza punto, minuscole): le stesse di
-/// `highlight::language_for`.
+/// `highlight::language_for`. Also whole file names, lowercase: Dual asks
+/// first with the whole name, then with the extension.
 pub const EXTENSIONS: &[&str] = &[
     "c", "cpp", "cc", "cxx", "c++", "h", "hpp", "hh", "hxx", "inl", "ino", "cs", "rs", "py", "pyw",
     "pyi", "js", "mjs", "cjs", "jsx", "html", "htm", "xhtml", "css", "php", "phtml", "php3",
     "php4", "php5", "phps", "sql", "md", "markdown", "mdown", "mkd", "toml", "sh", "bash", "zsh",
     "ksh", "command", "lua", "ts", "mts", "cts", "tsx", "json", "jsonc", "ipynb", "geojson",
+    "makefile", "dockerfile", "cmakelists.txt",
 ];
 
 #[cfg(test)]
