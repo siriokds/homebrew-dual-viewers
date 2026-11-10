@@ -94,6 +94,18 @@ struct Instance {
     spans: Vec<Span>,
 }
 
+/// A version number from Cargo.toml, at compile time.
+const fn const_u16(text: &str) -> u16 {
+    let bytes = text.as_bytes();
+    let mut value = 0u16;
+    let mut i = 0;
+    while i < bytes.len() {
+        value = value * 10 + (bytes[i] - b'0') as u16;
+        i += 1;
+    }
+    value
+}
+
 unsafe extern "C" fn create() -> *mut c_void {
     Box::into_raw(Box::<Instance>::default()).cast()
 }
@@ -184,8 +196,9 @@ pub extern "C" fn dual_viewer_plugin_load() -> *const c_void {
             kind: TYPE_SYNTAX_HIGHLIGHT,
             api_vmajor: API_VMAJOR,
             api_vminor: API_VMINOR,
-            version_major: 1,
-            version_minor: 0,
+            // From Cargo.toml, so the plugin never reports an old version.
+            version_major: const_u16(env!("CARGO_PKG_VERSION_MAJOR")),
+            version_minor: const_u16(env!("CARGO_PKG_VERSION_MINOR")),
             id: c"syntax".as_ptr(),
             name: c"Tree-sitter".as_ptr(),
             descr: c"Code colours in the text viewer (tree-sitter)".as_ptr(),
@@ -232,11 +245,13 @@ mod tests {
     fn through_the_c_functions() {
         let plugin = unsafe { &*dual_viewer_plugin_load().cast::<Plugin>() };
         assert_eq!((plugin.info.api_vmajor, plugin.info.api_vminor), (1, 2));
+        assert_eq!((plugin.info.version_major, plugin.info.version_minor), (1, 1));
         let ops = &plugin.ops;
         unsafe {
             let this = (ops.create)();
             assert_eq!((ops.can_handle)(this, c"rs".as_ptr()), 1);
             assert_eq!((ops.can_handle)(this, c"txt".as_ptr()), 0);
+            assert_eq!((ops.can_handle)(this, c"makefile".as_ptr()), 1);
             let text = "fn f() {} // x\n";
             let (mut spans, mut count) = (std::ptr::null(), 0usize);
             let ok = (ops.highlight)(this, text.as_ptr().cast(), text.len(), c"rs".as_ptr(), &mut spans, &mut count);
