@@ -1,0 +1,204 @@
+%YAML 1.2
+---
+name: Z80 Assembly (sjasmplus)
+scope: source.z80asm
+contexts:
+  main:
+    - include: comments
+    - include: line-directive
+    - include: end-of-source
+    - include: label-definition
+    - include: keywords
+    - include: strings
+    - include: mnemonics
+    - include: numbers
+    - include: includes
+    - include: labels
+  begin-end-body-1:
+    - meta_scope: comment.block.z80asm
+    - match: "\\*/"
+      pop: true
+  begin-end-body-2:
+    - meta_scope: comment.line.z80asm
+    - match: "\\n"
+      pop: true
+  begin-end-body-3:
+    - meta_scope: comment.line.z80asm
+    - match: "\\n"
+      pop: true
+  comments:
+    - match: "/\\*"
+      push: begin-end-body-1
+    - match: ;
+      push: begin-end-body-2
+    - match: //
+      push: begin-end-body-3
+  begin-end-body-4:
+    - match: (?!)
+      pop: true
+    - match: ^.+
+      scope: comment.block.ignored.z80asm
+    - include: comments
+    - include: numbers
+    - include: labels
+  end-of-source:
+    - match: "(?i:^(?:(?:\\s*>)?([@!]?\\.?[A-Za-z_][\\w.!?#@]*|\\d+)(\\+[\\d*])?:?)?\\s+\\.?(end)\\b)"
+      captures:
+        1: entity.name.function.z80asm
+        2: entity.name.function.z80asm
+        3: keyword.control.z80asm
+      push: begin-end-body-4
+  includes:
+    - match: "(?i:(?<=[\\s:])\\.?(include)\\b)(?:\\s*(<[^>\\n]*>))?"
+      captures:
+        1: keyword.control.z80asm
+        2: string.quoted.other.z80asm
+  begin-end-body-5:
+    - match: (?=;|//|$)
+      pop: true
+    - include: strings
+    - match: "[^\\s;\\\"']+"
+      scope: constant.numeric.integer.binary.z80asm
+  begin-end-body-6:
+    - match: (?=;|//|$)
+      pop: true
+    - include: strings
+    - match: "[0-9A-Fa-f]+"
+      scope: constant.numeric.integer.hexadecimal.z80asm
+  begin-end-body-7:
+    - meta_scope: meta.embedded.block.lua
+    - meta_content_scope: source.lua
+    - match: "(?i:(?<=[\\s:])\\.?(endlua)\\b)"
+      captures:
+        1: keyword.control.z80asm
+      pop: true
+    - include: "scope:source.lua"
+  keywords:
+    - match: "(?<=[\\s:])\\.(?:\\d+|\\([^)\\n]*\\))(?=\\s)"
+      scope: keyword.control.repeat.z80asm
+    - match: "(?i:(?<=[\\s:])\\.?(dg|defg)\\b)"
+      captures:
+        1: keyword.control.z80asm
+      push: begin-end-body-5
+    - match: "(?i:(?<=[\\s:])\\.?(dh|defh|hex)\\b)"
+      captures:
+        1: keyword.control.z80asm
+      push: begin-end-body-6
+    - match: "(?i:(?<=[\\s:])\\.?(?:equ|eval|[fr]?org|end?t|align|(?:de|un)?phase|shift|save(?:bin|dev|hob|nex|sna|tap|trd)|empty(?:tap|trd)|inc(?:bin|hob|trd)|binclude|includelua|insert|binary|end|out(?:put|end)|tap(?:out|end)|fpos|fname|slot|size|opt)\\b)"
+      scope: keyword.control.z80asm
+    - match: "(?i:(?<=[\\s:])\\.?(?:cpu|device|proc|macro|label|local|global|shared|public|forward|rept|e?dup|block|end[mprsw]|exitm|module|endmod(?:ule)?|(?:un)?define|export|disp|textarea|map|mmu|field|defarray|segment|restore|pushv|popv|enum|enumconf|nextenum)\\b)"
+      scope: keyword.control.z80asm
+    - match: "(?i:(?<=[\\s:])\\.?(?:assert|fatal|error|warning|message|display|print|title|prtit|prtexit|fail|shellexec|def[bdghlmswir]|d[bcghmswz]|abyte[cz]?|byte|d?word|hex)\\b)"
+      scope: keyword.control.z80asm
+    - match: "(?i:(?<=[\\s:])\\.?(?:page|newpage|radix|outradix|encoding|charset|codepage|macexp_(?:dft|ovr)|listing|(?:end)?struct|(?:end)?section|maxnest)\\b)"
+      scope: keyword.control.z80asm
+    - match: "(?i:(?<=[\\s:])\\.?(?:if|ifn?def|ifn?used|ifn?exist|else|elseif|endif)\\b)"
+      scope: keyword.control.z80asm
+    - match: "(?i:(?<=[\\s:])\\.?(?:bank|bankset|limit|protect|write\\s+direct|str)\\b)"
+      scope: keyword.control.z80asm
+    - match: "(?i:(?<=[\\s:])\\.?(?:inc(?:l4[89]|lz4|zx7|exo)|lz(?:4[89]?|w7|exo|close)|read)\\b)"
+      scope: keyword.control.z80asm
+    - match: "(?i:(?<=[\\s:])\\.?(?:repeat|while|[rw]end|until|(?:end)?switch|(?:else|end)?case|default|break|stop|function)\\b)"
+      scope: keyword.control.z80asm
+    - match: "(?i:(?<=[\\s:])\\.?(?:amsdos|breakpoint|buildcpr|buildsna|run|save|setcpc|setcrtc)\\b)"
+      scope: keyword.control.z80asm
+    - match: "(?i:(?<=[\\s:])\\.?(?:list|nolist|let|labelslist|bplist|setbp|setbreakpoint|cspectmap)\\b)"
+      scope: keyword.control.z80asm
+    - match: "(?i:(?<=[\\s:])\\.?(?:d24|dd|defp|dp|text|defdevice|endmap|hexend|hexout|ifn|memorymap|relocate_(?:start|end|table)|save3dos|saveamsdos|savecdt|savecpcsna|savecpr|savehex|sldopt)\\b)"
+      scope: keyword.control.z80asm
+    - match: "(?<=\\s)--[A-Za-z][\\w-]*(?:=[^\\s,;:]*)?"
+      scope: support.type.flag.z80asm
+    - match: "(?i:(?<=[\\s:])\\.?(lua)\\b(?:\\s+(allpass|pass[123])\\b)?)"
+      captures:
+        1: keyword.control.z80asm
+        2: support.type.flag.z80asm
+      push: begin-end-body-7
+  label-definition:
+    - match: "^(?:\\s*>)?([@!]?\\.?[A-Za-z_][\\w.!?#@]*|\\d+)(\\+[\\d*])?(?:(:)|(?=\\s|$))"
+      captures:
+        1: entity.name.function.z80asm
+        2: entity.name.function.z80asm
+  labels:
+    - match: "(?<!\\w)[.@]?[A-Za-z_][\\w.!?#@]*"
+      scope: variable.parameter.label.z80asm
+  line-directive:
+    - match: "^\\s*(#\\s*line)\\b"
+      captures:
+        1: keyword.control.z80asm
+  mnemonics:
+    - match: "\\b(?i:(j[pr]|call|ret))(?:\\s+(?i:([cmpsz]|n[csz]|p[eo])))?\\b"
+      scope: support.type.flag.z80asm
+      captures:
+        1: keyword.mnemonic.z80asm
+        2: meta.preprocessor.flag.z80asm
+    - match: "\\b(?i:z80|r800|msx|gbz80|zxspectrum(?:48|128|256|512|1024|2048|4096|8192|next)|amstradcpc(?:464|6128|plus)|noslot64k|(?:no)?(?:expand|expif|expmacro|export|intlabel|globalsymbols))\\b"
+      scope: support.type.flag.z80asm
+    - match: "\\b(?i:high|low|not|mod|sh[lr]|abs|sizeof|exist|norel|pair|u16)\\b"
+      scope: constant.numeric.operator.z80asm
+    - match: "(?:^|(?<=[\\s:]))(?i:ad[cd]|and|bit|ccf|cp|cp[di]r?|cpl|daa|dec|[de]i|djnz|ex[adx]?|halt|i[mn]|inc|in[di]r?|ld|ld[di]r?|neg|nop|or|ot[di]r|out|out[di]|pop|push|res|ret[in]|rla?|rlca?|r[lr]d|rra?|rrca?|rst|sbc|scf|set|s[lr]a|s[lr]l|slia|sli|sl1|sub|x?or)(?=[\\s:;]|$)"
+      scope: keyword.mnemonic.z80asm
+    - match: "(?:^|(?<=[\\s:]))(?i:swap|ldir?x|ldws|lddr?x|ldpirx|outinb|swapnib|mul|mirror|nextreg|pixel(ad|dn)|setae|te?st|bs[lr]a|bsr[lf]|brlc)(?=[\\s:;]|$)"
+      scope: keyword.mnemonic.z80asm
+    - match: "\\b(?i:[abcdefhlir]|ix|iy|af'?|bc|de|hl|pc|sp|ix[hlu]|iy[hlu]|[lh]x|x[lh]|[lh]y|y[lh])\\b"
+      scope: support.type.register.z80asm
+    - match: "(?i:\\{(?:hex[248]?|bin(?:8|16|32)?|int|eval|r[bw])?\\})"
+      scope: constant.language.operator.z80asm
+    - match: "\\b__(?:SJASMPLUS|VERSION|PASS|ERRORS|WARNINGS|INCLUDE_LEVEL|BASE_FILE|FILE|LINE|COUNTER|DATE|TIME)__\\b"
+      scope: constant.language.z80asm
+  numbers:
+    - match: "\\${2,4}|\\$(?![0-9a-fA-F])"
+      scope: constant.language.pc.z80asm
+    - match: "[$#][0-9a-fA-F](?:['_]?[0-9a-fA-F])*\\b"
+      scope: constant.numeric.integer.hexadecimal.z80asm
+    - match: "\\b0[xX][0-9a-fA-F](?:['_]?[0-9a-fA-F])*\\b"
+      scope: constant.numeric.integer.hexadecimal.z80asm
+    - match: "\\b0[bB][01](?:['_]?[01])*\\b"
+      scope: constant.numeric.integer.binary.z80asm
+    - match: "\\b0[qQ][0-7](?:['_]?[0-7])*\\b"
+      scope: constant.numeric.integer.octal.z80asm
+    - match: "\\b\\d+(?:_[bBfF]|[fF])\\b"
+      scope: variable.parameter.label.temporary.z80asm
+    - match: "\\b\\d(?:['_]?[0-9a-fA-F])*[hH]\\b"
+      scope: constant.numeric.integer.hexadecimal.z80asm
+    - match: "\\b[01](?:['_]?[01])*[bB]\\b"
+      scope: constant.numeric.integer.binary.z80asm
+    - match: "\\b\\d+[bB]\\b"
+      scope: variable.parameter.label.temporary.z80asm
+    - match: "\\b[0-7](?:['_]?[0-7])*[qQoO]\\b"
+      scope: constant.numeric.integer.octal.z80asm
+    - match: "%[01](?:['_]?[01])*\\b"
+      scope: constant.numeric.integer.binary.z80asm
+    - match: "\\b\\d(?:['_]?\\d)*(?:\\.\\d+)?[dD]?\\b"
+      scope: constant.numeric.integer.decimal.z80asm
+  string-character-escape:
+    - match: "\\\\(x[0-9A-Fa-f]{2}|[0-2][0-7]{0,2}|3[0-6][0-7]?|37[0-7]?|[4-7][0-7]?|.|$)"
+      scope: constant.character.escape.z80asm
+  begin-end-body-8:
+    - meta_scope: string.quoted.single.z80asm
+    - match: "(')(?!')(?:[zZcC](?!\\w))?|([^\\n])$|$"
+      captures:
+        1: punctuation.definition.string.end.z80asm
+        2: invalid.illegal.newline.z80asm
+      pop: true
+    - match: "''"
+      scope: constant.character.escape.z80asm
+  begin-end-body-9:
+    - meta_scope: string.quoted.double.z80asm
+    - match: "(\\\")(?:[zZcC](?!\\w))?|((?:[^\\\\\\n])$)|(?<!\\\\)$"
+      captures:
+        1: punctuation.definition.string.end.z80asm
+        2: invalid.illegal.newline.z80asm
+      pop: true
+    - include: string-character-escape
+  strings:
+    - match: "(?i:\\b((?:af|bc|de|hl)'))"
+      captures:
+        1: support.type.register.z80asm
+    - match: "'"
+      captures:
+        0: punctuation.definition.string.begin.z80asm
+      push: begin-end-body-8
+    - match: "\""
+      captures:
+        0: punctuation.definition.string.begin.z80asm
+      push: begin-end-body-9

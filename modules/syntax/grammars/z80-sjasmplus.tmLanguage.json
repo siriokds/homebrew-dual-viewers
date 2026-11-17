@@ -1,0 +1,410 @@
+{
+ "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+ "name": "Z80 Assembly (sjasmplus)",
+ "patterns": [
+  {
+   "include": "#comments"
+  },
+  {
+   "include": "#line-directive"
+  },
+  {
+   "include": "#end-of-source"
+  },
+  {
+   "include": "#label-definition"
+  },
+  {
+   "include": "#keywords"
+  },
+  {
+   "include": "#strings"
+  },
+  {
+   "include": "#mnemonics"
+  },
+  {
+   "include": "#numbers"
+  },
+  {
+   "include": "#includes"
+  },
+  {
+   "include": "#labels"
+  }
+ ],
+ "repository": {
+  "comments": {
+   "patterns": [
+    {
+     "name": "comment.block.z80asm",
+     "begin": "/\\*",
+     "end": "\\*/"
+    },
+    {
+     "name": "comment.line.z80asm",
+     "begin": ";",
+     "end": "\\n"
+    },
+    {
+     "name": "comment.line.z80asm",
+     "begin": "//",
+     "end": "\\n"
+    }
+   ]
+  },
+  "keywords": {
+   "patterns": [
+    {
+     "name": "keyword.control.repeat.z80asm",
+     "match": "(?<=[\\s:])\\.(?:\\d+|\\([^)\\n]*\\))(?=\\s)"
+    },
+    {
+     "begin": "(?i:(?<=[\\s:])\\.?(dg|defg)\\b)",
+     "beginCaptures": {
+      "1": {
+       "name": "keyword.control.z80asm"
+      }
+     },
+     "end": "(?=;|//|$)",
+     "patterns": [
+      {
+       "include": "#strings"
+      },
+      {
+       "name": "constant.numeric.integer.binary.z80asm",
+       "match": "[^\\s;\\\"']+"
+      }
+     ]
+    },
+    {
+     "begin": "(?i:(?<=[\\s:])\\.?(dh|defh|hex)\\b)",
+     "beginCaptures": {
+      "1": {
+       "name": "keyword.control.z80asm"
+      }
+     },
+     "end": "(?=;|//|$)",
+     "patterns": [
+      {
+       "include": "#strings"
+      },
+      {
+       "name": "constant.numeric.integer.hexadecimal.z80asm",
+       "match": "[0-9A-Fa-f]+"
+      }
+     ]
+    },
+    {
+     "name": "keyword.control.z80asm",
+     "match": "(?i:(?<=[\\s:])\\.?(?:equ|eval|[fr]?org|end?t|align|(?:de|un)?phase|shift|save(?:bin|dev|hob|nex|sna|tap|trd)|empty(?:tap|trd)|inc(?:bin|hob|trd)|binclude|includelua|insert|binary|end|out(?:put|end)|tap(?:out|end)|fpos|fname|slot|size|opt)\\b)"
+    },
+    {
+     "name": "keyword.control.z80asm",
+     "match": "(?i:(?<=[\\s:])\\.?(?:cpu|device|proc|macro|label|local|global|shared|public|forward|rept|e?dup|block|end[mprsw]|exitm|module|endmod(?:ule)?|(?:un)?define|export|disp|textarea|map|mmu|field|defarray|segment|restore|pushv|popv|enum|enumconf|nextenum)\\b)"
+    },
+    {
+     "name": "keyword.control.z80asm",
+     "match": "(?i:(?<=[\\s:])\\.?(?:assert|fatal|error|warning|message|display|print|title|prtit|prtexit|fail|shellexec|def[bdghlmswir]|d[bcghmswz]|abyte[cz]?|byte|d?word|hex)\\b)"
+    },
+    {
+     "name": "keyword.control.z80asm",
+     "match": "(?i:(?<=[\\s:])\\.?(?:page|newpage|radix|outradix|encoding|charset|codepage|macexp_(?:dft|ovr)|listing|(?:end)?struct|(?:end)?section|maxnest)\\b)"
+    },
+    {
+     "name": "keyword.control.z80asm",
+     "match": "(?i:(?<=[\\s:])\\.?(?:if|ifn?def|ifn?used|ifn?exist|else|elseif|endif)\\b)"
+    },
+    {
+     "name": "keyword.control.z80asm",
+     "match": "(?i:(?<=[\\s:])\\.?(?:bank|bankset|limit|protect|write\\s+direct|str)\\b)"
+    },
+    {
+     "name": "keyword.control.z80asm",
+     "match": "(?i:(?<=[\\s:])\\.?(?:inc(?:l4[89]|lz4|zx7|exo)|lz(?:4[89]?|w7|exo|close)|read)\\b)"
+    },
+    {
+     "name": "keyword.control.z80asm",
+     "match": "(?i:(?<=[\\s:])\\.?(?:repeat|while|[rw]end|until|(?:end)?switch|(?:else|end)?case|default|break|stop|function)\\b)"
+    },
+    {
+     "name": "keyword.control.z80asm",
+     "match": "(?i:(?<=[\\s:])\\.?(?:amsdos|breakpoint|buildcpr|buildsna|run|save|setcpc|setcrtc)\\b)"
+    },
+    {
+     "name": "keyword.control.z80asm",
+     "match": "(?i:(?<=[\\s:])\\.?(?:list|nolist|let|labelslist|bplist|setbp|setbreakpoint|cspectmap)\\b)"
+    },
+    {
+     "name": "keyword.control.z80asm",
+     "match": "(?i:(?<=[\\s:])\\.?(?:d24|dd|defp|dp|text|defdevice|endmap|hexend|hexout|ifn|memorymap|relocate_(?:start|end|table)|save3dos|saveamsdos|savecdt|savecpcsna|savecpr|savehex|sldopt)\\b)"
+    },
+    {
+     "name": "support.type.flag.z80asm",
+     "match": "(?<=\\s)--[A-Za-z][\\w-]*(?:=[^\\s,;:]*)?"
+    },
+    {
+     "name": "meta.embedded.block.lua",
+     "begin": "(?i:(?<=[\\s:])\\.?(lua)\\b(?:\\s+(allpass|pass[123])\\b)?)",
+     "beginCaptures": {
+      "1": {
+       "name": "keyword.control.z80asm"
+      },
+      "2": {
+       "name": "support.type.flag.z80asm"
+      }
+     },
+     "end": "(?i:(?<=[\\s:])\\.?(endlua)\\b)",
+     "endCaptures": {
+      "1": {
+       "name": "keyword.control.z80asm"
+      }
+     },
+     "contentName": "source.lua",
+     "patterns": [
+      {
+       "include": "source.lua"
+      }
+     ]
+    }
+   ]
+  },
+  "strings": {
+   "patterns": [
+    {
+     "match": "(?i:\\b((?:af|bc|de|hl)'))",
+     "captures": {
+      "1": {
+       "name": "support.type.register.z80asm"
+      }
+     }
+    },
+    {
+     "name": "string.quoted.single.z80asm",
+     "begin": "'",
+     "beginCaptures": {
+      "0": {
+       "name": "punctuation.definition.string.begin.z80asm"
+      }
+     },
+     "end": "(')(?!')(?:[zZcC](?!\\w))?|([^\\n])$|$",
+     "endCaptures": {
+      "1": {
+       "name": "punctuation.definition.string.end.z80asm"
+      },
+      "2": {
+       "name": "invalid.illegal.newline.z80asm"
+      }
+     },
+     "patterns": [
+      {
+       "name": "constant.character.escape.z80asm",
+       "match": "''"
+      }
+     ]
+    },
+    {
+     "name": "string.quoted.double.z80asm",
+     "begin": "\"",
+     "beginCaptures": {
+      "0": {
+       "name": "punctuation.definition.string.begin.z80asm"
+      }
+     },
+     "end": "(\\\")(?:[zZcC](?!\\w))?|((?:[^\\\\\\n])$)|(?<!\\\\)$",
+     "endCaptures": {
+      "1": {
+       "name": "punctuation.definition.string.end.z80asm"
+      },
+      "2": {
+       "name": "invalid.illegal.newline.z80asm"
+      }
+     },
+     "patterns": [
+      {
+       "include": "#string-character-escape"
+      }
+     ]
+    }
+   ]
+  },
+  "string-character-escape": {
+   "patterns": [
+    {
+     "name": "constant.character.escape.z80asm",
+     "match": "\\\\(x[0-9A-Fa-f]{2}|[0-2][0-7]{0,2}|3[0-6][0-7]?|37[0-7]?|[4-7][0-7]?|.|$)"
+    }
+   ]
+  },
+  "mnemonics": {
+   "patterns": [
+    {
+     "name": "support.type.flag.z80asm",
+     "match": "\\b(?i:(j[pr]|call|ret))(?:\\s+(?i:([cmpsz]|n[csz]|p[eo])))?\\b",
+     "captures": {
+      "1": {
+       "name": "keyword.mnemonic.z80asm"
+      },
+      "2": {
+       "name": "meta.preprocessor.flag.z80asm"
+      }
+     }
+    },
+    {
+     "name": "support.type.flag.z80asm",
+     "match": "\\b(?i:z80|r800|msx|gbz80|zxspectrum(?:48|128|256|512|1024|2048|4096|8192|next)|amstradcpc(?:464|6128|plus)|noslot64k|(?:no)?(?:expand|expif|expmacro|export|intlabel|globalsymbols))\\b"
+    },
+    {
+     "name": "constant.numeric.operator.z80asm",
+     "match": "\\b(?i:high|low|not|mod|sh[lr]|abs|sizeof|exist|norel|pair|u16)\\b",
+     "comment": "sjasm numeric operators"
+    },
+    {
+     "name": "keyword.mnemonic.z80asm",
+     "match": "(?:^|(?<=[\\s:]))(?i:ad[cd]|and|bit|ccf|cp|cp[di]r?|cpl|daa|dec|[de]i|djnz|ex[adx]?|halt|i[mn]|inc|in[di]r?|ld|ld[di]r?|neg|nop|or|ot[di]r|out|out[di]|pop|push|res|ret[in]|rla?|rlca?|r[lr]d|rra?|rrca?|rst|sbc|scf|set|s[lr]a|s[lr]l|slia|sli|sl1|sub|x?or)(?=[\\s:;]|$)"
+    },
+    {
+     "name": "keyword.mnemonic.z80asm",
+     "match": "(?:^|(?<=[\\s:]))(?i:swap|ldir?x|ldws|lddr?x|ldpirx|outinb|swapnib|mul|mirror|nextreg|pixel(ad|dn)|setae|te?st|bs[lr]a|bsr[lf]|brlc)(?=[\\s:;]|$)"
+    },
+    {
+     "name": "support.type.register.z80asm",
+     "match": "\\b(?i:[abcdefhlir]|ix|iy|af'?|bc|de|hl|pc|sp|ix[hlu]|iy[hlu]|[lh]x|x[lh]|[lh]y|y[lh])\\b"
+    },
+    {
+     "name": "constant.language.operator.z80asm",
+     "match": "(?i:\\{(?:hex[248]?|bin(?:8|16|32)?|int|eval|r[bw])?\\})"
+    },
+    {
+     "name": "constant.language.z80asm",
+     "match": "\\b__(?:SJASMPLUS|VERSION|PASS|ERRORS|WARNINGS|INCLUDE_LEVEL|BASE_FILE|FILE|LINE|COUNTER|DATE|TIME)__\\b"
+    }
+   ]
+  },
+  "numbers": {
+   "patterns": [
+    {
+     "name": "constant.language.pc.z80asm",
+     "match": "\\${2,4}|\\$(?![0-9a-fA-F])"
+    },
+    {
+     "name": "constant.numeric.integer.hexadecimal.z80asm",
+     "match": "[$#][0-9a-fA-F](?:['_]?[0-9a-fA-F])*\\b"
+    },
+    {
+     "name": "constant.numeric.integer.hexadecimal.z80asm",
+     "match": "\\b0[xX][0-9a-fA-F](?:['_]?[0-9a-fA-F])*\\b"
+    },
+    {
+     "name": "constant.numeric.integer.binary.z80asm",
+     "match": "\\b0[bB][01](?:['_]?[01])*\\b"
+    },
+    {
+     "name": "constant.numeric.integer.octal.z80asm",
+     "match": "\\b0[qQ][0-7](?:['_]?[0-7])*\\b"
+    },
+    {
+     "name": "variable.parameter.label.temporary.z80asm",
+     "match": "\\b\\d+(?:_[bBfF]|[fF])\\b"
+    },
+    {
+     "name": "constant.numeric.integer.hexadecimal.z80asm",
+     "match": "\\b\\d(?:['_]?[0-9a-fA-F])*[hH]\\b"
+    },
+    {
+     "name": "constant.numeric.integer.binary.z80asm",
+     "match": "\\b[01](?:['_]?[01])*[bB]\\b"
+    },
+    {
+     "name": "variable.parameter.label.temporary.z80asm",
+     "match": "\\b\\d+[bB]\\b"
+    },
+    {
+     "name": "constant.numeric.integer.octal.z80asm",
+     "match": "\\b[0-7](?:['_]?[0-7])*[qQoO]\\b"
+    },
+    {
+     "name": "constant.numeric.integer.binary.z80asm",
+     "match": "%[01](?:['_]?[01])*\\b"
+    },
+    {
+     "name": "constant.numeric.integer.decimal.z80asm",
+     "match": "\\b\\d(?:['_]?\\d)*(?:\\.\\d+)?[dD]?\\b"
+    }
+   ]
+  },
+  "includes": {
+   "patterns": [
+    {
+     "match": "(?i:(?<=[\\s:])\\.?(include)\\b)(?:\\s*(<[^>\\n]*>))?",
+     "captures": {
+      "1": {
+       "name": "keyword.control.z80asm"
+      },
+      "2": {
+       "name": "string.quoted.other.z80asm"
+      }
+     }
+    }
+   ]
+  },
+  "labels": {
+   "patterns": [
+    {
+     "match": "(?<!\\w)[.@]?[A-Za-z_][\\w.!?#@]*",
+     "name": "variable.parameter.label.z80asm"
+    }
+   ]
+  },
+  "label-definition": {
+   "match": "^(?:\\s*>)?([@!]?\\.?[A-Za-z_][\\w.!?#@]*|\\d+)(\\+[\\d*])?(?:(:)|(?=\\s|$))",
+   "captures": {
+    "1": {
+     "name": "entity.name.function.z80asm"
+    },
+    "2": {
+     "name": "entity.name.function.z80asm"
+    }
+   }
+  },
+  "end-of-source": {
+   "begin": "(?i:^(?:(?:\\s*>)?([@!]?\\.?[A-Za-z_][\\w.!?#@]*|\\d+)(\\+[\\d*])?:?)?\\s+\\.?(end)\\b)",
+   "beginCaptures": {
+    "1": {
+     "name": "entity.name.function.z80asm"
+    },
+    "2": {
+     "name": "entity.name.function.z80asm"
+    },
+    "3": {
+     "name": "keyword.control.z80asm"
+    }
+   },
+   "end": "(?!)",
+   "patterns": [
+    {
+     "name": "comment.block.ignored.z80asm",
+     "match": "^.+"
+    },
+    {
+     "include": "#comments"
+    },
+    {
+     "include": "#numbers"
+    },
+    {
+     "include": "#labels"
+    }
+   ]
+  },
+  "line-directive": {
+   "match": "^\\s*(#\\s*line)\\b",
+   "captures": {
+    "1": {
+     "name": "keyword.control.z80asm"
+    }
+   }
+  }
+ },
+ "scopeName": "source.z80asm"
+}

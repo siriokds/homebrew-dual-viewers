@@ -165,6 +165,9 @@ pub enum Language {
     Make,
     Dockerfile,
     CMake,
+    /// Z80 assembly for sjasmplus, coloured with a TextMate grammar through syntect
+    /// (`textmate.rs`), not with tree-sitter: it is not in `ALL`.
+    Z80,
 }
 
 const ALL: [Language; 21] = [
@@ -216,6 +219,7 @@ pub fn language_for(extension: &str) -> Option<Language> {
         "makefile" => Language::Make,
         "dockerfile" => Language::Dockerfile,
         "cmakelists.txt" => Language::CMake,
+        "asm" | "z80" | "a80" => Language::Z80,
         _ => return None,
     })
 }
@@ -452,6 +456,7 @@ fn build(language: Language) -> Result<HighlightConfiguration, String> {
                 "",
                 "",
             ),
+            Z80 => return Err("Z80 is coloured with syntect (textmate.rs)".into()),
         };
     let mut config = HighlightConfiguration::new(grammar, format!("{language:?}"), &highlights, injections, locals)
         .map_err(|e| format!("{language:?}: {e:?}"))?;
@@ -481,6 +486,9 @@ pub struct Span {
 /// (anche quelli normali, `Role::Default`). Vuoto se la grammatica non si
 /// carica o l'analisi si ferma.
 pub fn highlight(language: Language, text: &[u8]) -> Vec<Span> {
+    if language == Language::Z80 {
+        return crate::textmate::highlight_z80(text);
+    }
     let Some(config) = configuration(language) else {
         return Vec::new();
     };
@@ -541,6 +549,8 @@ mod tests {
         assert_eq!(language_for("SQL"), Some(Language::Sql));
         assert_eq!(language_for("php"), Some(Language::Php));
         assert_eq!(language_for("md"), Some(Language::Markdown));
+        assert_eq!(language_for("ASM"), Some(Language::Z80));
+        assert_eq!(language_for("z80"), Some(Language::Z80));
         assert_eq!(language_for("txt"), None);
         assert_eq!(language_for(""), None);
     }

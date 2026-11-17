@@ -1,0 +1,530 @@
+%YAML 1.2
+---
+name: Lua
+scope: source.lua
+contexts:
+  begin-end-body-3:
+    - match: "(?=[\\),])"
+      pop: true
+    - include: emmydoc.type
+  begin-end-body-2:
+    - meta_scope: meta.parameter.lua
+    - match: "(\\))|(?=[\\-{}\\[\\]\"'])|(?<!\\.)\\.(?!\\.)"
+      captures:
+        1: punctuation.definition.parameters.finish.lua
+      pop: true
+    - include: comment
+    - match: "(\\.{3})\\s*([a-zA-Z_][a-zA-Z0-9_]*)"
+      captures:
+        1: constant.language.lua
+        2: variable.parameter.function.lua
+    - match: "[a-zA-Z_][a-zA-Z0-9_]*"
+      scope: variable.parameter.function.lua
+    - match: ","
+      scope: punctuation.separator.arguments.lua
+    - match: ":"
+      captures:
+        0: punctuation.separator.arguments.lua
+      push: begin-end-body-3
+  begin-end-body-1:
+    - meta_scope: meta.function.lua
+    - match: "(?<=[\\)\\-{}\\[\\]\"'])"
+      pop: true
+    - include: comment
+    - match: "(\\()"
+      captures:
+        1: punctuation.definition.parameters.begin.lua
+      push: begin-end-body-2
+    - match: "\\b([a-zA-Z_][a-zA-Z0-9_]*)\\b\\s*(?=:)"
+      scope: entity.name.class.lua
+    - match: "\\b([a-zA-Z_][a-zA-Z0-9_]*)\\b"
+      scope: entity.name.function.lua
+  main:
+    - match: "\\b(?:(local)\\s+)?(function)\\b(?![,:])"
+      captures:
+        1: keyword.local.lua
+        2: keyword.control.lua
+      push: begin-end-body-1
+    - match: "(?<![\\w\\d.])0[xX][0-9A-Fa-f]+(\\.[0-9A-Fa-f]*)?([eE]-?\\d*)?([pP][-+]\\d+)?"
+      scope: constant.numeric.float.hexadecimal.lua
+    - match: "(?<![\\w\\d.])0[xX]\\.[0-9A-Fa-f]+([eE]-?\\d*)?([pP][-+]\\d+)?"
+      scope: constant.numeric.float.hexadecimal.lua
+    - match: "(?<![\\w\\d.])0[xX][0-9A-Fa-f]+(?![pPeE.0-9])"
+      scope: constant.numeric.integer.hexadecimal.lua
+    - match: "(?<![\\w\\d.])\\d+(\\.\\d*)?([eE]-?\\d*)?"
+      scope: constant.numeric.float.lua
+    - match: "(?<![\\w\\d.])\\.\\d+([eE]-?\\d*)?"
+      scope: constant.numeric.float.lua
+    - match: "(?<![\\w\\d.])\\d+(?![pPeE.0-9])"
+      scope: constant.numeric.integer.lua
+    - include: string
+    - match: "\\A(#!).*$\\n?"
+      scope: comment.line.shebang.lua
+      captures:
+        1: punctuation.definition.comment.lua
+    - include: comment
+    - match: "\\b(goto)\\s+([a-zA-Z_][a-zA-Z0-9_]*)"
+      captures:
+        1: keyword.control.goto.lua
+        2: string.tag.lua
+    - match: "(::)\\s*[a-zA-Z_][a-zA-Z0-9_]*\\s*(::)"
+      scope: string.tag.lua
+      captures:
+        1: punctuation.section.embedded.begin.lua
+        2: punctuation.section.embedded.end.lua
+    - match: "<\\s*(const|close)\\s*>"
+      captures:
+        0: storage.type.attribute.lua
+    - match: "\\<[a-zA-Z_\\*][a-zA-Z0-9_\\.\\*\\-]*\\>"
+      scope: storage.type.generic.lua
+    - match: "\\b(break|do|else|for|if|elseif|goto|return|then|repeat|while|until|end|in)\\b"
+      scope: keyword.control.lua
+    - match: "\\b(local)\\b"
+      scope: keyword.local.lua
+    - match: "^\\s*(global)\\b(?!\\s*=)"
+      captures:
+        1: keyword.global.lua
+    - match: "\\b(function)\\b(?![,:])"
+      scope: keyword.control.lua
+    - match: "(?<![^.]\\.|:)\\b(false|nil(?!:)|true|_ENV|_G|_VERSION|math\\.(pi|huge|maxinteger|mininteger)|utf8\\.charpattern|io\\.(stdin|stdout|stderr)|package\\.(config|cpath|loaded|loaders|path|preload|searchers))\\b|(?<![.])\\.{3}(?!\\.)"
+      scope: constant.language.lua
+    - match: "(?<![^.]\\.|:)\\b(self)\\b"
+      scope: variable.language.self.lua
+    - match: "(?<![^.]\\.|:)\\b(assert|collectgarbage|dofile|error|getfenv|getmetatable|ipairs|load|loadfile|loadstring|module|next|pairs|pcall|print|rawequal|rawget|rawlen|rawset|require|select|setfenv|setmetatable|tonumber|tostring|type|unpack|xpcall)\\b(?!\\s*=(?!=))"
+      scope: support.function.lua
+    - match: "(?<![^.]\\.|:)\\b(async)\\b(?!\\s*=(?!=))"
+      scope: entity.name.tag.lua
+    - match: "(?<![^.]\\.|:)\\b(coroutine\\.(create|isyieldable|close|resume|running|status|wrap|yield)|string\\.(byte|char|dump|find|format|gmatch|gsub|len|lower|match|pack|packsize|rep|reverse|sub|unpack|upper)|table\\.(concat|create|insert|maxn|move|pack|remove|sort|unpack)|math\\.(abs|acos|asin|atan2?|ceil|cosh?|deg|exp|floor|fmod|frexp|ldexp|log|log10|max|min|modf|pow|rad|random|randomseed|sinh?|sqrt|tanh?|tointeger|type)|io\\.(close|flush|input|lines|open|output|popen|read|tmpfile|type|write)|os\\.(clock|date|difftime|execute|exit|getenv|remove|rename|setlocale|time|tmpname)|package\\.(loadlib|seeall|searchpath)|debug\\.(debug|[gs]etfenv|[gs]ethook|getinfo|[gs]etlocal|[gs]etmetatable|getregistry|[gs]etupvalue|[gs]etuservalue|set[Cc]stacklimit|traceback|upvalueid|upvaluejoin)|bit32\\.(arshift|band|bnot|bor|btest|bxor|extract|replace|lrotate|lshift|rrotate|rshift)|utf8\\.(char|codes|codepoint|len|offset))\\b(?!\\s*=(?!=))"
+      scope: support.function.library.lua
+    - match: "\\b(\\|\\||\\&\\&|\\!)\\b"
+      scope: keyword.operator.lua
+    - match: "\\b(and|or|not)\\b"
+      scope: keyword.operator.logical.lua
+    - match: "\\b([a-zA-Z_][a-zA-Z0-9_]*)\\b(?=\\s*(?:[({\"']|\\[\\[))"
+      scope: support.function.any-method.lua
+    - match: "\\b([a-zA-Z_][a-zA-Z0-9_]*)\\b(?=\\s*\\??:)"
+      scope: entity.name.class.lua
+    - match: "(?<=[^.]\\.|:)\\b([a-zA-Z_][a-zA-Z0-9_]*)\\b(?!\\s*=\\s*\\b(function)\\b)"
+      scope: entity.other.attribute.lua
+    - match: "\\b([a-zA-Z_][a-zA-Z0-9_]*)\\b(?!\\s*=\\s*\\b(function)\\b)"
+      scope: variable.other.lua
+    - match: "\\b([a-zA-Z_][a-zA-Z0-9_]*)\\b(?=\\s*=\\s*\\b(function)\\b)"
+      scope: entity.name.function.lua
+    - match: "\\+|-|%|#|\\*|\\/|\\^|==?|~=|!=|<=?|>=?|(?<!\\.)\\.{2}(?!\\.)"
+      scope: keyword.operator.lua
+  begin-end-body-4:
+    - meta_scope: ""
+    - match: "(--)?\\]\\1\\]"
+      captures:
+        0: punctuation.definition.comment.end.lua
+      pop: true
+    - include: "scope:source.lua"
+  begin-end-body-5:
+    - meta_scope: comment.block.lua
+    - match: "(--)?\\]\\1\\]"
+      captures:
+        0: punctuation.definition.comment.end.lua
+      pop: true
+    - include: emmydoc
+    - include: ldoc_tag
+  begin-end-body-6:
+    - meta_scope: comment.line.double-dash.lua
+    - match: "\\n"
+      pop: true
+  begin-end-body-7:
+    - meta_scope: comment.line.double-dash.documentation.lua
+    - match: "\\n"
+      pop: true
+    - include: emmydoc
+    - include: ldoc_tag
+  begin-end-body-8:
+    - meta_scope: comment.line.double-dash.lua
+    - match: "\\n"
+      pop: true
+    - include: ldoc_tag
+  begin-end-body-9:
+    - meta_scope: comment.block.lua
+    - match: "\\*\\/"
+      captures:
+        0: punctuation.definition.comment.end.lua
+      pop: true
+    - include: emmydoc
+    - include: ldoc_tag
+  comment:
+    - match: "--\\[(=*)\\[@@@"
+      captures:
+        0: punctuation.definition.comment.begin.lua
+      push: begin-end-body-4
+    - match: "--\\[(=*)\\["
+      captures:
+        0: punctuation.definition.comment.begin.lua
+      push: begin-end-body-5
+    - match: "----"
+      captures:
+        0: punctuation.definition.comment.lua
+      push: begin-end-body-6
+    - match: "---"
+      captures:
+        0: punctuation.definition.comment.lua
+      push: begin-end-body-7
+    - match: "--"
+      captures:
+        0: punctuation.definition.comment.lua
+      push: begin-end-body-8
+    - match: "\\/\\*"
+      captures:
+        0: punctuation.definition.comment.begin.lua
+      push: begin-end-body-9
+  begin-end-body-10:
+    - match: "(?=[\\n@#])"
+      pop: true
+    - match: "\\b([a-zA-Z_\\*][a-zA-Z0-9_\\.\\*\\-]*)"
+      scope: support.class.lua
+    - match: ":|,"
+      scope: keyword.operator.lua
+  begin-end-body-12:
+    - match: "(?=\\n)"
+      pop: true
+  begin-end-body-11:
+    - match: "(?=[\\n@#])"
+      pop: true
+    - match: "\\b([a-zA-Z_\\*][a-zA-Z0-9_\\.\\*\\-]*)"
+      captures:
+        0: variable.lua
+      push: begin-end-body-12
+  begin-end-body-13:
+    - match: "(?=[\\n@#])"
+      pop: true
+    - include: emmydoc.type
+  begin-end-body-15:
+    - match: "(?=[\\n#])"
+      pop: true
+    - include: emmydoc.type
+  begin-end-body-14:
+    - match: "(?=[\\n@#])"
+      pop: true
+    - match: "\\b([a-zA-Z_\\*][a-zA-Z0-9_\\.\\*\\-]*)"
+      captures:
+        0: variable.lua
+      push: begin-end-body-15
+  begin-end-body-16:
+    - match: "(?=[\\n@#])"
+      pop: true
+    - include: emmydoc.type
+  begin-end-body-18:
+    - match: "(?=\\n)"
+      pop: true
+    - include: emmydoc.type
+    - match: "([+-|])"
+      scope: keyword.operator.lua
+  begin-end-body-17:
+    - match: "(?=[\\n@#])"
+      pop: true
+    - match: "\\b([a-zA-Z_\\*][a-zA-Z0-9_\\.\\*\\-]*)"
+      captures:
+        0: variable.other.lua
+      push: begin-end-body-18
+  begin-end-body-20:
+    - match: "(?=[\\n#])"
+      pop: true
+    - include: emmydoc.type
+  begin-end-body-19:
+    - match: "(?=[\\n@#])"
+      pop: true
+    - match: "\\b([a-zA-Z_][a-zA-Z0-9_]*)\\b(\\??)"
+      captures:
+        1: entity.name.variable.lua
+        2: keyword.operator.lua
+      push: begin-end-body-20
+  begin-end-body-21:
+    - match: "(?=[\\n@#])"
+      pop: true
+    - match: "\\?"
+      scope: keyword.operator.lua
+    - include: emmydoc.type
+  begin-end-body-23:
+    - match: "(?=[\\n#])"
+      pop: true
+    - include: string
+    - include: emmydoc.type
+    - match: "\\]"
+      scope: keyword.operator.lua
+  begin-end-body-22:
+    - match: "(?=[\\n@#])"
+      pop: true
+    - match: "(\\b([a-zA-Z_][a-zA-Z0-9_]*)\\b|(\\[))(\\??)"
+      captures:
+        2: entity.name.variable.lua
+        3: keyword.operator.lua
+      push: begin-end-body-23
+  begin-end-body-25:
+    - match: "(?=\\n)|(,)"
+      captures:
+        0: keyword.operator.lua
+      pop: true
+    - match: ":"
+      scope: keyword.operator.lua
+    - include: emmydoc.type
+  begin-end-body-24:
+    - match: "(?=[\\n@#])"
+      pop: true
+    - match: "\\b([a-zA-Z_][a-zA-Z0-9_]*)\\b"
+      captures:
+        0: storage.type.generic.lua
+      push: begin-end-body-25
+  begin-end-body-26:
+    - match: "(?=[\\n@#])"
+      pop: true
+    - include: emmydoc.type
+  begin-end-body-27:
+    - match: "(?=[\\n@#])"
+      pop: true
+    - include: emmydoc.type
+  begin-end-body-28:
+    - match: "(?=[\\n@#])"
+      pop: true
+  begin-end-body-29:
+    - match: "(?=[\\n@#])"
+      pop: true
+  begin-end-body-30:
+    - match: "(?=[\\n@#])"
+      pop: true
+  begin-end-body-31:
+    - match: "(?=[\\n@#])"
+      pop: true
+  begin-end-body-32:
+    - match: "(?=[\\n@#])"
+      pop: true
+  begin-end-body-33:
+    - match: "(?=[\\n@#])"
+      pop: true
+    - match: "\\b(5\\.1|5\\.2|5\\.3|5\\.4|JIT)\\b"
+      scope: support.class.lua
+    - match: ",|\\>|\\<"
+      scope: keyword.operator.lua
+  begin-end-body-34:
+    - match: "(?=[\\n@#])"
+      pop: true
+    - match: "\\b([a-zA-Z_\\*][a-zA-Z0-9_\\.\\*\\-]*)"
+      scope: support.class.lua
+    - match: "#"
+      scope: keyword.operator.lua
+  begin-end-body-36:
+    - match: "(?=\\n)"
+      pop: true
+    - match: "\\b([a-zA-Z_\\*][a-zA-Z0-9_\\-]*)"
+      scope: support.class.lua
+    - match: ","
+      scope: keyword.operator.lua
+  begin-end-body-35:
+    - match: "(?=[\\n@#])"
+      pop: true
+    - match: "([a-zA-Z_\\-0-9]+)[ \\t]*(:)?"
+      captures:
+        1: keyword.other.unit
+        2: keyword.operator.unit
+      push: begin-end-body-36
+  begin-end-body-37:
+    - match: "(?=[\\n@#])"
+      pop: true
+    - include: string
+  begin-end-body-38:
+    - match: "(?=[\\n@#])"
+      pop: true
+    - include: string
+  emmydoc:
+    - match: "(?<=---)[ \\t]*@class"
+      captures:
+        0: storage.type.annotation.lua
+      push: begin-end-body-10
+    - match: "(?<=---)[ \\t]*@enum"
+      captures:
+        0: storage.type.annotation.lua
+      push: begin-end-body-11
+    - match: "(?<=---)[ \\t]*@type"
+      captures:
+        0: storage.type.annotation.lua
+      push: begin-end-body-13
+    - match: "(?<=---)[ \\t]*@alias"
+      captures:
+        0: storage.type.annotation.lua
+      push: begin-end-body-14
+    - match: "(?<=---)[ \\t]*(@operator)\\s*(\\b[a-z]+)?"
+      captures:
+        1: storage.type.annotation.lua
+        2: support.function.library.lua
+      push: begin-end-body-16
+    - match: "(?<=---)[ \\t]*@cast"
+      captures:
+        0: storage.type.annotation.lua
+      push: begin-end-body-17
+    - match: "(?<=---)[ \\t]*@param"
+      captures:
+        0: storage.type.annotation.lua
+      push: begin-end-body-19
+    - match: "(?<=---)[ \\t]*@return"
+      captures:
+        0: storage.type.annotation.lua
+      push: begin-end-body-21
+    - match: "(?<=---)[ \\t]*@field"
+      captures:
+        0: storage.type.annotation.lua
+      push: begin-end-body-22
+    - match: "(?<=---)[ \\t]*@generic"
+      captures:
+        0: storage.type.annotation.lua
+      push: begin-end-body-24
+    - match: "(?<=---)[ \\t]*@vararg"
+      captures:
+        0: storage.type.annotation.lua
+      push: begin-end-body-26
+    - match: "(?<=---)[ \\t]*@overload"
+      captures:
+        0: storage.type.annotation.lua
+      push: begin-end-body-27
+    - match: "(?<=---)[ \\t]*@deprecated"
+      captures:
+        0: storage.type.annotation.lua
+      push: begin-end-body-28
+    - match: "(?<=---)[ \\t]*@meta"
+      captures:
+        0: storage.type.annotation.lua
+      push: begin-end-body-29
+    - match: "(?<=---)[ \\t]*@private"
+      captures:
+        0: storage.type.annotation.lua
+      push: begin-end-body-30
+    - match: "(?<=---)[ \\t]*@protected"
+      captures:
+        0: storage.type.annotation.lua
+      push: begin-end-body-31
+    - match: "(?<=---)[ \\t]*@package"
+      captures:
+        0: storage.type.annotation.lua
+      push: begin-end-body-32
+    - match: "(?<=---)[ \\t]*@version"
+      captures:
+        0: storage.type.annotation.lua
+      push: begin-end-body-33
+    - match: "(?<=---)[ \\t]*@see"
+      captures:
+        0: storage.type.annotation.lua
+      push: begin-end-body-34
+    - match: "(?<=---)[ \\t]*@diagnostic"
+      captures:
+        0: storage.type.annotation.lua
+      push: begin-end-body-35
+    - match: "(?<=---)[ \\t]*@module"
+      captures:
+        0: storage.type.annotation.lua
+      push: begin-end-body-37
+    - match: "(?<=---)[ \\t]*@(async|nodiscard)"
+      scope: storage.type.annotation.lua
+    - match: "(?<=---)\\|\\s*[\\>\\+]?"
+      captures:
+        0: storage.type.annotation.lua
+      push: begin-end-body-38
+  begin-end-body-39:
+    - match: "(?=[\\s#])"
+      pop: true
+    - match: "[\\(\\),\\:\\?\\[\\]\\<\\>][ \\t]*"
+      scope: keyword.operator.lua
+    - match: "([a-zA-Z_][a-zA-Z0-9_\\.\\*\\-]*)(?<!,)[ \\t]*(?=\\??:)"
+      scope: entity.name.variable.lua
+    - include: emmydoc.type
+    - include: string
+  begin-end-body-40:
+    - match: "(?=[\\s\\)\\,\\?\\:\\}\\|#])"
+      pop: true
+    - match: "([a-zA-Z0-9_\\.\\*\\[\\]\\<\\>\\,\\-]+)(?<!,)[ \\t]*"
+      scope: support.type.lua
+    - match: "(\\.\\.\\.)[ \\t]*"
+      scope: constant.language.lua
+    - include: string
+  emmydoc.type:
+    - match: "\\bfun\\b"
+      captures:
+        0: keyword.control.lua
+      push: begin-end-body-39
+    - match: "\\<[a-zA-Z_\\*][a-zA-Z0-9_\\.\\*\\-]*\\>"
+      scope: storage.type.generic.lua
+    - match: "\\basync\\b"
+      scope: entity.name.tag.lua
+    - match: "[\\{\\}\\:\\,\\?\\|\\`][ \\t]*"
+      scope: keyword.operator.lua
+    - match: "(?=[a-zA-Z_\\.\\*\"'\\[])"
+      push: begin-end-body-40
+  escaped_char:
+    - match: "\\\\[abfnrtv\\\\\"'\\n]"
+      scope: constant.character.escape.lua
+    - match: "\\\\z[\\n\\t ]*"
+      scope: constant.character.escape.lua
+    - match: "\\\\\\d{1,3}"
+      scope: constant.character.escape.byte.lua
+    - match: "\\\\x[0-9A-Fa-f][0-9A-Fa-f]"
+      scope: constant.character.escape.byte.lua
+    - match: "\\\\u\\{[0-9A-Fa-f]+\\}"
+      scope: constant.character.escape.unicode.lua
+    - match: "\\\\."
+      scope: invalid.illegal.character.escape.lua
+  ldoc_tag:
+    - match: "[ \\t]*(@)(alias|annotation|author|charset|class|classmod|comment|constructor|copyright|description|example|export|factory|field|file|fixme|function|include|lfunction|license|local|module|name|param|pragma|private|raise|release|return|script|section|see|set|static|submodule|summary|tfield|thread|tparam|treturn|todo|topic|type|usage|warning|within)\\b"
+      captures:
+        1: punctuation.definition.block.tag.ldoc
+        2: storage.type.class.ldoc
+  begin-end-body-41:
+    - meta_scope: string.quoted.single.lua
+    - match: "'[ \\t]*|(?=\\n)"
+      captures:
+        0: punctuation.definition.string.end.lua
+      pop: true
+    - include: escaped_char
+  begin-end-body-42:
+    - meta_scope: string.quoted.double.lua
+    - match: "\"[ \\t]*|(?=\\n)"
+      captures:
+        0: punctuation.definition.string.end.lua
+      pop: true
+    - include: escaped_char
+  begin-end-body-43:
+    - meta_scope: string.quoted.double.lua
+    - match: "`[ \\t]*|(?=\\n)"
+      captures:
+        0: punctuation.definition.string.end.lua
+      pop: true
+  begin-end-body-44:
+    - meta_content_scope: meta.embedded.lua
+    - match: "(\\]\\2\\])[ \\t]*"
+      captures:
+        0: string.quoted.other.multiline.lua
+        1: punctuation.definition.string.end.lua
+      pop: true
+    - include: "scope:source.c"
+  begin-end-body-45:
+    - meta_scope: string.quoted.other.multiline.lua
+    - match: "\\]\\1\\][ \\t]*"
+      captures:
+        0: punctuation.definition.string.end.lua
+      pop: true
+  string:
+    - match: "'"
+      captures:
+        0: punctuation.definition.string.begin.lua
+      push: begin-end-body-41
+    - match: "\""
+      captures:
+        0: punctuation.definition.string.begin.lua
+      push: begin-end-body-42
+    - match: "`"
+      captures:
+        0: punctuation.definition.string.begin.lua
+      push: begin-end-body-43
+    - match: "(?<=\\.cdef)\\s*(\\[(=*)\\[)"
+      captures:
+        0: string.quoted.other.multiline.lua
+        1: punctuation.definition.string.begin.lua
+      push: begin-end-body-44
+    - match: "(?<!--)\\[(=*)\\["
+      captures:
+        0: punctuation.definition.string.begin.lua
+      push: begin-end-body-45

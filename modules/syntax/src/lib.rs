@@ -8,6 +8,7 @@
 //!   apre con dlopen da `/opt/homebrew/opt/dual-syntax/lib`.
 
 pub mod highlight;
+mod textmate;
 
 #[cfg(feature = "plugin")]
 mod abi;
@@ -20,7 +21,7 @@ pub const EXTENSIONS: &[&str] = &[
     "pyi", "js", "mjs", "cjs", "jsx", "html", "htm", "xhtml", "css", "php", "phtml", "php3",
     "php4", "php5", "phps", "sql", "md", "markdown", "mdown", "mkd", "toml", "sh", "bash", "zsh",
     "ksh", "command", "lua", "ts", "mts", "cts", "tsx", "json", "jsonc", "ipynb", "geojson",
-    "makefile", "dockerfile", "cmakelists.txt",
+    "makefile", "dockerfile", "cmakelists.txt", "asm", "z80", "a80",
 ];
 
 #[cfg(test)]
