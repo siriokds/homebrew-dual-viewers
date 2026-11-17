@@ -14,27 +14,45 @@ import copy
 import json
 import sys
 
-# A statement starts after whitespace or after ':' (sjasmplus joins instructions with colons:
-# ORG 100h:LD A,10:LD B,10). Directives may carry a leading dot (.db, .INCLUDE).
+# A word of a statement follows whitespace or ':' (sjasmplus joins instructions with colons:
+# ORG 100h:LD A,10:LD B,10).
 STMT = r"(?<=[\s:])"
 
 # Label characters (documentation, "Labels"): start with a letter or '_', then letters, digits
 # and _ . ! ? # @ ; prefixes . (local), @ (global as-is), ! (does not affect local labels).
 LABEL = r"[A-Za-z_][\w.!?#@]*"
 
-# Official keywords the source grammar does not know (asm-z80-sj.xml lists of sjasmplus).
-MISSING_DIRECTIVES = (
-    "d24|dd|defp|dp|text|defdevice|endmap|hexend|hexout|ifn|memorymap|"
-    "relocate_(?:start|end|table)|save3dos|saveamsdos|savecdt|savecpcsna|savecpr|savehex|sldopt"
-)
+# The directives: those sjasmplus registers (sjasm/directives.cpp) with EQU, DEFL and
+# MEMORYMAP of its documentation; MAP, FIELD and ENDMAP, kept by its Kate syntax file
+# (asm-z80-sj.xml); and those of the old Sjasm 0.39/0.42 its users still have in their
+# sources (its manual: REPEAT ... ENDREPEAT, CODE, DEFPAGE, UPDATE, the IFIDN family...).
+# The source grammar's words of other assemblers (read, stop, default, print, message,
+# local...) are labels here. A directive is recognised only where a statement starts
+# ("directive" below): as an operand ("call update", "jp .stop") the same word is a label.
+DIRECTIVES = sorted(set("""
+    abyte abytec abytez align assert binary block bplist byte cspectmap d24 db dc dd defarray
+    defb defd defdevice defg defh define defl defm defp defs defw dephase device dg dh disp display
+    dm dp ds dup dw dword dz edup else elseif emptytap emptytrd encoding end endif endlua endm
+    endmod endmodule endr ends endt endw ent equ export fpos hex hexend hexout if ifdef ifn ifndef
+    ifnused ifused incbin inchob include includelua inctrd insert labelslist lua macro memorymap
+    mmu module opt org outend output page phase relocate_end relocate_start relocate_table rept
+    save3dos saveamsdos savebin savecdt savecpcsna savecpr savedev savehex savehob savenex savesna
+    savetap savetrd setbp setbreakpoint shellexec size sldopt slot struct tapend tapout text
+    textarea undefine unphase while winexec word map field endmap
+    repeat endrepeat endwhile endmacro exitmacro endstruct code defpage update error rotate ascmap
+    dt ifb ifnb ifid ifnid ifidn ifidni ifdif ifdifi ifin ifini ifnum ifnnum ifstr ifnstr ifexists
+    ifnexists
+""".split()), key=lambda w: (-len(w), w))
+# Those with a rule of their own, which colours what follows them too (DG bits, DH and HEX
+# data, the Lua block, INCLUDE <file>).
+OWN_RULE = {"dg", "defg", "dh", "defh", "hex", "lua", "include"}
+# DEFINE+ and DEFARRAY+ (the + redefines).
+DIRECTIVE = r"(?:(?:define|defarray)\+(?=\s)|(?:" + "|".join(w for w in DIRECTIVES if w not in OWN_RULE) + r")\b)"
+# Their leading-dot form, where a statement starts, is only a keyword (.INCLUDE "file").
+DOTTED_OWN = r"\.(?:" + "|".join(sorted(OWN_RULE)) + r")\b"
+# The dot-repeater: .3, .(12-len), before a single instruction.
+REPEATER = r"\.(?:\d+|\([^)\n]*\))"
 BUILTINS = "SJASMPLUS|VERSION|PASS|ERRORS|WARNINGS|INCLUDE_LEVEL|BASE_FILE|FILE|LINE|COUNTER|DATE|TIME"
-
-
-def statement_start(match):
-    """`(?<=\\s)` at the start of a keyword list becomes `(?<=[\\s:])\\.?`."""
-    old = r"(?i:(?<=\s)(?:"
-    assert match.startswith(old), match
-    return "(?i:" + STMT + r"\.?(?:" + match[len(old):]
 
 
 def z80(source):
@@ -46,35 +64,34 @@ def z80(source):
     # ({address}, {b address}) and fill structures, so that rule goes.
     repo["comments"]["patterns"] = [p for p in repo["comments"]["patterns"] if p.get("begin") != "{"]
 
-    # Keywords: after ':' too, with an optional leading dot; the missing official ones; the
-    # dot-repeater (.3 INC A, .(12-len) BYTE 0, .2 .3 RET); OPT options (--syntax=abf).
+    # Keywords: the dot-repeater (.3 INC A, .2 .3 RET), OPT options (--syntax=abf), and the
+    # directives with a rule of their own (the others are "directive", where a statement starts).
     kw = repo["keywords"]["patterns"]
-    for p in kw:
-        if "match" in p:
-            p["match"] = statement_start(p["match"])
-    lua = kw[-1]
-    assert lua.get("name") == "string.other.lua.z80asm"
-    kw.remove(lua)
-    kw.append({"name": "keyword.control.z80asm", "match": "(?i:" + STMT + r"\.?(?:" + MISSING_DIRECTIVES + r")\b)"})
-    kw.insert(0, {"name": "keyword.control.repeat.z80asm", "match": STMT + r"\.(?:\d+|\([^)\n]*\))(?=\s)"})
-    kw.append({"name": "support.type.flag.z80asm", "match": r"(?<=\s)--[A-Za-z][\w-]*(?:=[^\s,;:]*)?"})
+    assert len(kw) == 11 and kw[-1].get("name") == "string.other.lua.z80asm"
+    kw[:] = [
+        {"name": "keyword.control.repeat.z80asm", "match": STMT + REPEATER + r"(?=\s)"},
+        {"name": "support.type.flag.z80asm", "match": r"(?<=\s)--[A-Za-z][\w-]*(?:=[^\s,;:]*)?"},
+        # CODE PAGE n of the old Sjasm.
+        {"match": r"(?i:(?<=\bcode)\s+(page)\b)", "captures": {"1": {"name": "keyword.control.z80asm"}}},
+    ]
     # DG bits ("-", "." and "_" are 0, any other character 1) and DH/HEX hexadecimal pairs,
     # up to the comment (documentation, DG and DH).
     data_end = r"(?=;|//|$)"
     kw[1:1] = [
-        {"begin": "(?i:" + STMT + r"\.?(dg|defg)\b)", "beginCaptures": {"1": {"name": "keyword.control.z80asm"}},
+        {"begin": "(?i:" + STMT + r"(dg|defg)\b)", "beginCaptures": {"1": {"name": "keyword.control.z80asm"}},
          "end": data_end, "patterns": [{"include": "#strings"},
                                        {"name": "constant.numeric.integer.binary.z80asm", "match": r"[^\s;\"']+"}]},
-        {"begin": "(?i:" + STMT + r"\.?(dh|defh|hex)\b)", "beginCaptures": {"1": {"name": "keyword.control.z80asm"}},
+        {"begin": "(?i:" + STMT + r"(dh|defh|hex)\b)", "beginCaptures": {"1": {"name": "keyword.control.z80asm"}},
          "end": data_end, "patterns": [{"include": "#strings"},
                                        {"name": "constant.numeric.integer.hexadecimal.z80asm", "match": "[0-9A-Fa-f]+"}]},
     ]
-    # LUA [ALLPASS|PASS1|PASS2|PASS3] ... ENDLUA: the code inside is Lua.
-    kw.append({
+    # LUA [ALLPASS|PASS1|PASS2|PASS3] ... ENDLUA: the code inside is Lua (before the
+    # directives, which list LUA too).
+    kw.insert(1, {
         "name": "meta.embedded.block.lua",
-        "begin": "(?i:" + STMT + r"\.?(lua)\b(?:\s+(allpass|pass[123])\b)?)",
+        "begin": "(?i:" + STMT + r"(lua)\b(?:\s+(allpass|pass[123])\b)?)",
         "beginCaptures": {"1": {"name": "keyword.control.z80asm"}, "2": {"name": "support.type.flag.z80asm"}},
-        "end": "(?i:" + STMT + r"\.?(endlua)\b)",
+        "end": "(?i:" + STMT + r"(endlua)\b)",
         "endCaptures": {"1": {"name": "keyword.control.z80asm"}},
         "contentName": "source.lua",
         "patterns": [{"include": "source.lua"}],
@@ -143,7 +160,7 @@ def z80(source):
 
     # INCLUDE after ':' or with a dot too; <file> as the name (quoted names are strings).
     repo["includes"]["patterns"] = [{
-        "match": "(?i:" + STMT + r"\.?(include)\b)(?:\s*(<[^>\n]*>))?",
+        "match": "(?i:" + STMT + r"(include)\b)(?:\s*(<[^>\n]*>))?",
         "captures": {"1": {"name": "keyword.control.z80asm"}, "2": {"name": "string.quoted.other.z80asm"}},
     }]
 
@@ -169,13 +186,31 @@ def z80(source):
         "patterns": [{"name": "comment.block.ignored.z80asm", "match": "^.+"}, {"include": "#comments"},
                      {"include": "#numbers"}, {"include": "#labels"}],
     }
+    # A directive, with or without a leading dot (.db, .INCLUDE), where a statement starts:
+    # after whitespace at the start of the line, after a label at the start of the line, after
+    # ':', after dot-repeaters.
+    label_first = r"(?:(?:\s*>)?([@!]?\.?" + LABEL + r"|\d+)(\+[\d*])?:?)?"
+    repeaters = r"((?:" + REPEATER + r"\s+)*)"
+    directive = r"(\.?" + DIRECTIVE + "|" + DOTTED_OWN + ")"
+    repo["directive"] = {"patterns": [
+        {"match": "(?i:^" + label_first + r"\s+" + repeaters + directive + ")",
+         "captures": {"1": {"name": "entity.name.function.z80asm"}, "2": {"name": "entity.name.function.z80asm"},
+                      "3": {"name": "keyword.control.repeat.z80asm"}, "4": {"name": "keyword.control.z80asm"}}},
+        {"match": r"(?i:(?<=:)\s*" + repeaters + directive + ")",
+         "captures": {"1": {"name": "keyword.control.repeat.z80asm"}, "2": {"name": "keyword.control.z80asm"}}},
+        # The repeat count of the old Sjasm where a statement starts: "Maal8: [3] add a,a".
+        {"match": "^" + label_first + r"\s+(\[[^\]\n]*\])(?=\s)",
+         "captures": {"1": {"name": "entity.name.function.z80asm"}, "2": {"name": "entity.name.function.z80asm"},
+                      "3": {"name": "keyword.control.repeat.z80asm"}}},
+    ]}
     # #line of the C preprocessor (documentation, "#line").
     repo["line-directive"] = {"match": r"^\s*(#\s*line)\b", "captures": {"1": {"name": "keyword.control.z80asm"}}}
 
     top = [p["include"] for p in g["patterns"]]
     assert top == ["#comments", "#keywords", "#strings", "#mnemonics", "#numbers", "#includes", "#labels"], top
-    g["patterns"] = [{"include": "#" + k} for k in ("comments", "line-directive", "end-of-source", "label-definition", "keywords",
-                                                    "strings", "mnemonics", "numbers", "includes", "labels")]
+    g["patterns"] = [{"include": "#" + k} for k in ("comments", "line-directive", "end-of-source", "directive",
+                                                    "label-definition", "includes", "keywords",
+                                                    "strings", "mnemonics", "numbers", "labels")]
     return g
 
 

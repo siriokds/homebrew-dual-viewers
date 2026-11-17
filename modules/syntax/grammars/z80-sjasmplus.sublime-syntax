@@ -7,12 +7,13 @@ contexts:
     - include: comments
     - include: line-directive
     - include: end-of-source
+    - include: directive
     - include: label-definition
+    - include: includes
     - include: keywords
     - include: strings
     - include: mnemonics
     - include: numbers
-    - include: includes
     - include: labels
   begin-end-body-1:
     - meta_scope: comment.block.z80asm
@@ -33,6 +34,22 @@ contexts:
       push: begin-end-body-2
     - match: //
       push: begin-end-body-3
+  directive:
+    - match: "(?i:^(?:(?:\\s*>)?([@!]?\\.?[A-Za-z_][\\w.!?#@]*|\\d+)(\\+[\\d*])?:?)?\\s+((?:\\.(?:\\d+|\\([^)\\n]*\\))\\s+)*)(\\.?(?:(?:define|defarray)\\+(?=\\s)|(?:relocate_start|relocate_table|setbreakpoint|relocate_end|includelua|labelslist|saveamsdos|savecpcsna|cspectmap|defdevice|endmodule|endrepeat|endstruct|exitmacro|ifnexists|memorymap|shellexec|defarray|emptytap|emptytrd|encoding|endmacro|endwhile|ifexists|save3dos|textarea|undefine|defpage|dephase|display|ifnused|savebin|savecdt|savecpr|savedev|savehex|savehob|savenex|savesna|savetap|savetrd|unphase|winexec|abytec|abytez|ascmap|assert|binary|bplist|define|device|elseif|endlua|endmap|endmod|export|hexend|hexout|ifdifi|ifidni|ifndef|ifnnum|ifnstr|ifused|incbin|inchob|inctrd|insert|module|outend|output|repeat|rotate|sldopt|struct|tapend|tapout|update|abyte|align|block|dword|endif|error|field|ifdef|ifdif|ifidn|ifini|ifnid|ifnum|ifstr|macro|phase|setbp|while|byte|code|defb|defd|defl|defm|defp|defs|defw|disp|edup|else|endm|endr|ends|endt|endw|fpos|ifid|ifin|ifnb|page|rept|size|slot|text|word|d24|dup|end|ent|equ|ifb|ifn|map|mmu|opt|org|db|dc|dd|dm|dp|ds|dt|dw|dz|if)\\b)|\\.(?:defg|defh|dg|dh|hex|include|lua)\\b))"
+      captures:
+        1: entity.name.function.z80asm
+        2: entity.name.function.z80asm
+        3: keyword.control.repeat.z80asm
+        4: keyword.control.z80asm
+    - match: "(?i:(?<=:)\\s*((?:\\.(?:\\d+|\\([^)\\n]*\\))\\s+)*)(\\.?(?:(?:define|defarray)\\+(?=\\s)|(?:relocate_start|relocate_table|setbreakpoint|relocate_end|includelua|labelslist|saveamsdos|savecpcsna|cspectmap|defdevice|endmodule|endrepeat|endstruct|exitmacro|ifnexists|memorymap|shellexec|defarray|emptytap|emptytrd|encoding|endmacro|endwhile|ifexists|save3dos|textarea|undefine|defpage|dephase|display|ifnused|savebin|savecdt|savecpr|savedev|savehex|savehob|savenex|savesna|savetap|savetrd|unphase|winexec|abytec|abytez|ascmap|assert|binary|bplist|define|device|elseif|endlua|endmap|endmod|export|hexend|hexout|ifdifi|ifidni|ifndef|ifnnum|ifnstr|ifused|incbin|inchob|inctrd|insert|module|outend|output|repeat|rotate|sldopt|struct|tapend|tapout|update|abyte|align|block|dword|endif|error|field|ifdef|ifdif|ifidn|ifini|ifnid|ifnum|ifstr|macro|phase|setbp|while|byte|code|defb|defd|defl|defm|defp|defs|defw|disp|edup|else|endm|endr|ends|endt|endw|fpos|ifid|ifin|ifnb|page|rept|size|slot|text|word|d24|dup|end|ent|equ|ifb|ifn|map|mmu|opt|org|db|dc|dd|dm|dp|ds|dt|dw|dz|if)\\b)|\\.(?:defg|defh|dg|dh|hex|include|lua)\\b))"
+      captures:
+        1: keyword.control.repeat.z80asm
+        2: keyword.control.z80asm
+    - match: "^(?:(?:\\s*>)?([@!]?\\.?[A-Za-z_][\\w.!?#@]*|\\d+)(\\+[\\d*])?:?)?\\s+(\\[[^\\]\\n]*\\])(?=\\s)"
+      captures:
+        1: entity.name.function.z80asm
+        2: entity.name.function.z80asm
+        3: keyword.control.repeat.z80asm
   begin-end-body-4:
     - match: (?!)
       pop: true
@@ -49,70 +66,51 @@ contexts:
         3: keyword.control.z80asm
       push: begin-end-body-4
   includes:
-    - match: "(?i:(?<=[\\s:])\\.?(include)\\b)(?:\\s*(<[^>\\n]*>))?"
+    - match: "(?i:(?<=[\\s:])(include)\\b)(?:\\s*(<[^>\\n]*>))?"
       captures:
         1: keyword.control.z80asm
         2: string.quoted.other.z80asm
   begin-end-body-5:
+    - meta_scope: meta.embedded.block.lua
+    - meta_content_scope: source.lua
+    - match: "(?i:(?<=[\\s:])(endlua)\\b)"
+      captures:
+        1: keyword.control.z80asm
+      pop: true
+    - include: "scope:source.lua"
+  begin-end-body-6:
     - match: (?=;|//|$)
       pop: true
     - include: strings
     - match: "[^\\s;\\\"']+"
       scope: constant.numeric.integer.binary.z80asm
-  begin-end-body-6:
+  begin-end-body-7:
     - match: (?=;|//|$)
       pop: true
     - include: strings
     - match: "[0-9A-Fa-f]+"
       scope: constant.numeric.integer.hexadecimal.z80asm
-  begin-end-body-7:
-    - meta_scope: meta.embedded.block.lua
-    - meta_content_scope: source.lua
-    - match: "(?i:(?<=[\\s:])\\.?(endlua)\\b)"
-      captures:
-        1: keyword.control.z80asm
-      pop: true
-    - include: "scope:source.lua"
   keywords:
     - match: "(?<=[\\s:])\\.(?:\\d+|\\([^)\\n]*\\))(?=\\s)"
       scope: keyword.control.repeat.z80asm
-    - match: "(?i:(?<=[\\s:])\\.?(dg|defg)\\b)"
-      captures:
-        1: keyword.control.z80asm
-      push: begin-end-body-5
-    - match: "(?i:(?<=[\\s:])\\.?(dh|defh|hex)\\b)"
-      captures:
-        1: keyword.control.z80asm
-      push: begin-end-body-6
-    - match: "(?i:(?<=[\\s:])\\.?(?:equ|eval|[fr]?org|end?t|align|(?:de|un)?phase|shift|save(?:bin|dev|hob|nex|sna|tap|trd)|empty(?:tap|trd)|inc(?:bin|hob|trd)|binclude|includelua|insert|binary|end|out(?:put|end)|tap(?:out|end)|fpos|fname|slot|size|opt)\\b)"
-      scope: keyword.control.z80asm
-    - match: "(?i:(?<=[\\s:])\\.?(?:cpu|device|proc|macro|label|local|global|shared|public|forward|rept|e?dup|block|end[mprsw]|exitm|module|endmod(?:ule)?|(?:un)?define|export|disp|textarea|map|mmu|field|defarray|segment|restore|pushv|popv|enum|enumconf|nextenum)\\b)"
-      scope: keyword.control.z80asm
-    - match: "(?i:(?<=[\\s:])\\.?(?:assert|fatal|error|warning|message|display|print|title|prtit|prtexit|fail|shellexec|def[bdghlmswir]|d[bcghmswz]|abyte[cz]?|byte|d?word|hex)\\b)"
-      scope: keyword.control.z80asm
-    - match: "(?i:(?<=[\\s:])\\.?(?:page|newpage|radix|outradix|encoding|charset|codepage|macexp_(?:dft|ovr)|listing|(?:end)?struct|(?:end)?section|maxnest)\\b)"
-      scope: keyword.control.z80asm
-    - match: "(?i:(?<=[\\s:])\\.?(?:if|ifn?def|ifn?used|ifn?exist|else|elseif|endif)\\b)"
-      scope: keyword.control.z80asm
-    - match: "(?i:(?<=[\\s:])\\.?(?:bank|bankset|limit|protect|write\\s+direct|str)\\b)"
-      scope: keyword.control.z80asm
-    - match: "(?i:(?<=[\\s:])\\.?(?:inc(?:l4[89]|lz4|zx7|exo)|lz(?:4[89]?|w7|exo|close)|read)\\b)"
-      scope: keyword.control.z80asm
-    - match: "(?i:(?<=[\\s:])\\.?(?:repeat|while|[rw]end|until|(?:end)?switch|(?:else|end)?case|default|break|stop|function)\\b)"
-      scope: keyword.control.z80asm
-    - match: "(?i:(?<=[\\s:])\\.?(?:amsdos|breakpoint|buildcpr|buildsna|run|save|setcpc|setcrtc)\\b)"
-      scope: keyword.control.z80asm
-    - match: "(?i:(?<=[\\s:])\\.?(?:list|nolist|let|labelslist|bplist|setbp|setbreakpoint|cspectmap)\\b)"
-      scope: keyword.control.z80asm
-    - match: "(?i:(?<=[\\s:])\\.?(?:d24|dd|defp|dp|text|defdevice|endmap|hexend|hexout|ifn|memorymap|relocate_(?:start|end|table)|save3dos|saveamsdos|savecdt|savecpcsna|savecpr|savehex|sldopt)\\b)"
-      scope: keyword.control.z80asm
-    - match: "(?<=\\s)--[A-Za-z][\\w-]*(?:=[^\\s,;:]*)?"
-      scope: support.type.flag.z80asm
-    - match: "(?i:(?<=[\\s:])\\.?(lua)\\b(?:\\s+(allpass|pass[123])\\b)?)"
+    - match: "(?i:(?<=[\\s:])(lua)\\b(?:\\s+(allpass|pass[123])\\b)?)"
       captures:
         1: keyword.control.z80asm
         2: support.type.flag.z80asm
+      push: begin-end-body-5
+    - match: "(?i:(?<=[\\s:])(dg|defg)\\b)"
+      captures:
+        1: keyword.control.z80asm
+      push: begin-end-body-6
+    - match: "(?i:(?<=[\\s:])(dh|defh|hex)\\b)"
+      captures:
+        1: keyword.control.z80asm
       push: begin-end-body-7
+    - match: "(?<=\\s)--[A-Za-z][\\w-]*(?:=[^\\s,;:]*)?"
+      scope: support.type.flag.z80asm
+    - match: "(?i:(?<=\\bcode)\\s+(page)\\b)"
+      captures:
+        1: keyword.control.z80asm
   label-definition:
     - match: "^(?:\\s*>)?([@!]?\\.?[A-Za-z_][\\w.!?#@]*|\\d+)(\\+[\\d*])?(?:(:)|(?=\\s|$))"
       captures:

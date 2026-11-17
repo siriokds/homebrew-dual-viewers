@@ -33,8 +33,14 @@ defines differently:
   suffixes; the shadow registers `af'`, `bc'`, `de'`, `hl'`; an unclosed string ends with its line;
 - labels: a definition at the start of the line (also after `>`, with `+1` or `+*`), the
   characters `_ . ! ? # @`; temporary labels `1_B`, `1_F` and the old `2B` in branches;
-- statements after `:` (`ORG 100h:LD A,10`) and directives with a leading dot (`.db`);
-  the dot-repeater (`.3 INC A`, `.(n)`); the official directives the source lacks; `#line`;
+- directives: those sjasmplus registers in its source (`sjasm/directives.cpp`), with `EQU`,
+  `DEFL`, `MEMORYMAP`, `MAP`/`FIELD`/`ENDMAP`, and those of the old Sjasm 0.39/0.42 still found
+  in its users' sources (`REPEAT ... ENDREPEAT`, `CODE PAGE n`, `DEFPAGE`, the `IFIDN` family,
+  the repeat count `[3] add a,a`); the source grammar's words of other assemblers (`read`,
+  `stop`, `print`, `local`...) are labels. A directive is recognised only where a statement
+  starts (start of the line, after a label, after `:`, after a dot-repeater), with or without
+  a leading dot (`.db`): as an operand (`jp .stop`, `call update`) the word is a label;
+- statements after `:` (`ORG 100h:LD A,10`); the dot-repeater (`.3 INC A`, `.(n)`); `#line`;
   OPT options; `__FILE__` and the other built-in names; the device names;
 - `{ ... }` is not a comment (it reads memory in sjasmplus); the functions of the AS assembler
   (`sin`, `val`, `ld`...) are not sjasmplus words;
@@ -61,6 +67,9 @@ the converted files are out of date.
 
 ## Checked against
 
+- two real projects: one built with sjasmplus (55 files, 29,600 lines) and one with the old
+  Sjasm 0.42 (988 files, 360,000 lines): no invalid mark, no word left plain except one file in
+  another assembler's format; every change of colour against the source grammar was looked at;
 - the sjasmplus sources (z00m128/sjasmplus, commit `5c44bea`, 2026-11-14): every example is
   coloured with no word left plain and no invalid mark; in the tests, only the lines that are
   errors on purpose (their expected listings say so) stay marked;

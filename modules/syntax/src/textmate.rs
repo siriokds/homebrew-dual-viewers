@@ -227,7 +227,13 @@ mod tests {
                     val     equ #B0\n\
                     \x20   .3 inc a\n\
                     \x20   org 100h:ld a,10:.db 1\n\
-                    \x20   djnz 2_B\n";
+                    \x20   djnz 2_B\n\
+                    \x20   jp .stop\n\
+                    \x20   djnz .byte\n\
+                    \x20   call update\n\
+                    \x20   repeat 4\n\
+                    Maal8:\t[3]\tadd a,a\n\
+                    \x20   ld a,[hl]\n";
         assert_eq!(role_at(text, "device", "device"), Role::Control);
         assert_eq!(role_at(text, "device", "zxspectrum48"), Role::Type);
         assert_eq!(role_at(text, "; directive", "; directive"), Role::Comment);
@@ -253,6 +259,15 @@ mod tests {
         assert_eq!(role_at(text, "100h:", "ld"), Role::Keyword);
         assert_eq!(role_at(text, "100h:", ".db"), Role::Control);
         assert_eq!(role_at(text, "djnz", "2_B"), Role::Variable);
+        // A directive only where a statement starts: as an operand the word is a label.
+        assert_eq!(role_at(text, "jp .stop", ".stop"), Role::Variable);
+        assert_eq!(role_at(text, "djnz .byte", ".byte"), Role::Variable);
+        assert_eq!(role_at(text, "call update", "update"), Role::Variable);
+        // The old Sjasm: REPEAT and the repeat count in brackets; [hl] stays an address.
+        assert_eq!(role_at(text, "repeat 4", "repeat"), Role::Control);
+        assert_eq!(role_at(text, "Maal8", "[3]"), Role::Control);
+        assert_eq!(role_at(text, "ld a,[hl]", "hl"), Role::Type);
+        assert_eq!(role_at(text, "ld a,[hl]", "["), Role::Default);
     }
 
     #[test]

@@ -12,7 +12,13 @@
    "include": "#end-of-source"
   },
   {
+   "include": "#directive"
+  },
+  {
    "include": "#label-definition"
+  },
+  {
+   "include": "#includes"
   },
   {
    "include": "#keywords"
@@ -25,9 +31,6 @@
   },
   {
    "include": "#numbers"
-  },
-  {
-   "include": "#includes"
   },
   {
    "include": "#labels"
@@ -60,7 +63,31 @@
      "match": "(?<=[\\s:])\\.(?:\\d+|\\([^)\\n]*\\))(?=\\s)"
     },
     {
-     "begin": "(?i:(?<=[\\s:])\\.?(dg|defg)\\b)",
+     "name": "meta.embedded.block.lua",
+     "begin": "(?i:(?<=[\\s:])(lua)\\b(?:\\s+(allpass|pass[123])\\b)?)",
+     "beginCaptures": {
+      "1": {
+       "name": "keyword.control.z80asm"
+      },
+      "2": {
+       "name": "support.type.flag.z80asm"
+      }
+     },
+     "end": "(?i:(?<=[\\s:])(endlua)\\b)",
+     "endCaptures": {
+      "1": {
+       "name": "keyword.control.z80asm"
+      }
+     },
+     "contentName": "source.lua",
+     "patterns": [
+      {
+       "include": "source.lua"
+      }
+     ]
+    },
+    {
+     "begin": "(?i:(?<=[\\s:])(dg|defg)\\b)",
      "beginCaptures": {
       "1": {
        "name": "keyword.control.z80asm"
@@ -78,7 +105,7 @@
      ]
     },
     {
-     "begin": "(?i:(?<=[\\s:])\\.?(dh|defh|hex)\\b)",
+     "begin": "(?i:(?<=[\\s:])(dh|defh|hex)\\b)",
      "beginCaptures": {
       "1": {
        "name": "keyword.control.z80asm"
@@ -96,76 +123,16 @@
      ]
     },
     {
-     "name": "keyword.control.z80asm",
-     "match": "(?i:(?<=[\\s:])\\.?(?:equ|eval|[fr]?org|end?t|align|(?:de|un)?phase|shift|save(?:bin|dev|hob|nex|sna|tap|trd)|empty(?:tap|trd)|inc(?:bin|hob|trd)|binclude|includelua|insert|binary|end|out(?:put|end)|tap(?:out|end)|fpos|fname|slot|size|opt)\\b)"
-    },
-    {
-     "name": "keyword.control.z80asm",
-     "match": "(?i:(?<=[\\s:])\\.?(?:cpu|device|proc|macro|label|local|global|shared|public|forward|rept|e?dup|block|end[mprsw]|exitm|module|endmod(?:ule)?|(?:un)?define|export|disp|textarea|map|mmu|field|defarray|segment|restore|pushv|popv|enum|enumconf|nextenum)\\b)"
-    },
-    {
-     "name": "keyword.control.z80asm",
-     "match": "(?i:(?<=[\\s:])\\.?(?:assert|fatal|error|warning|message|display|print|title|prtit|prtexit|fail|shellexec|def[bdghlmswir]|d[bcghmswz]|abyte[cz]?|byte|d?word|hex)\\b)"
-    },
-    {
-     "name": "keyword.control.z80asm",
-     "match": "(?i:(?<=[\\s:])\\.?(?:page|newpage|radix|outradix|encoding|charset|codepage|macexp_(?:dft|ovr)|listing|(?:end)?struct|(?:end)?section|maxnest)\\b)"
-    },
-    {
-     "name": "keyword.control.z80asm",
-     "match": "(?i:(?<=[\\s:])\\.?(?:if|ifn?def|ifn?used|ifn?exist|else|elseif|endif)\\b)"
-    },
-    {
-     "name": "keyword.control.z80asm",
-     "match": "(?i:(?<=[\\s:])\\.?(?:bank|bankset|limit|protect|write\\s+direct|str)\\b)"
-    },
-    {
-     "name": "keyword.control.z80asm",
-     "match": "(?i:(?<=[\\s:])\\.?(?:inc(?:l4[89]|lz4|zx7|exo)|lz(?:4[89]?|w7|exo|close)|read)\\b)"
-    },
-    {
-     "name": "keyword.control.z80asm",
-     "match": "(?i:(?<=[\\s:])\\.?(?:repeat|while|[rw]end|until|(?:end)?switch|(?:else|end)?case|default|break|stop|function)\\b)"
-    },
-    {
-     "name": "keyword.control.z80asm",
-     "match": "(?i:(?<=[\\s:])\\.?(?:amsdos|breakpoint|buildcpr|buildsna|run|save|setcpc|setcrtc)\\b)"
-    },
-    {
-     "name": "keyword.control.z80asm",
-     "match": "(?i:(?<=[\\s:])\\.?(?:list|nolist|let|labelslist|bplist|setbp|setbreakpoint|cspectmap)\\b)"
-    },
-    {
-     "name": "keyword.control.z80asm",
-     "match": "(?i:(?<=[\\s:])\\.?(?:d24|dd|defp|dp|text|defdevice|endmap|hexend|hexout|ifn|memorymap|relocate_(?:start|end|table)|save3dos|saveamsdos|savecdt|savecpcsna|savecpr|savehex|sldopt)\\b)"
-    },
-    {
      "name": "support.type.flag.z80asm",
      "match": "(?<=\\s)--[A-Za-z][\\w-]*(?:=[^\\s,;:]*)?"
     },
     {
-     "name": "meta.embedded.block.lua",
-     "begin": "(?i:(?<=[\\s:])\\.?(lua)\\b(?:\\s+(allpass|pass[123])\\b)?)",
-     "beginCaptures": {
-      "1": {
-       "name": "keyword.control.z80asm"
-      },
-      "2": {
-       "name": "support.type.flag.z80asm"
-      }
-     },
-     "end": "(?i:(?<=[\\s:])\\.?(endlua)\\b)",
-     "endCaptures": {
+     "match": "(?i:(?<=\\bcode)\\s+(page)\\b)",
+     "captures": {
       "1": {
        "name": "keyword.control.z80asm"
       }
-     },
-     "contentName": "source.lua",
-     "patterns": [
-      {
-       "include": "source.lua"
-      }
-     ]
+     }
     }
    ]
   },
@@ -336,7 +303,7 @@
   "includes": {
    "patterns": [
     {
-     "match": "(?i:(?<=[\\s:])\\.?(include)\\b)(?:\\s*(<[^>\\n]*>))?",
+     "match": "(?i:(?<=[\\s:])(include)\\b)(?:\\s*(<[^>\\n]*>))?",
      "captures": {
       "1": {
        "name": "keyword.control.z80asm"
@@ -394,6 +361,52 @@
     },
     {
      "include": "#labels"
+    }
+   ]
+  },
+  "directive": {
+   "patterns": [
+    {
+     "match": "(?i:^(?:(?:\\s*>)?([@!]?\\.?[A-Za-z_][\\w.!?#@]*|\\d+)(\\+[\\d*])?:?)?\\s+((?:\\.(?:\\d+|\\([^)\\n]*\\))\\s+)*)(\\.?(?:(?:define|defarray)\\+(?=\\s)|(?:relocate_start|relocate_table|setbreakpoint|relocate_end|includelua|labelslist|saveamsdos|savecpcsna|cspectmap|defdevice|endmodule|endrepeat|endstruct|exitmacro|ifnexists|memorymap|shellexec|defarray|emptytap|emptytrd|encoding|endmacro|endwhile|ifexists|save3dos|textarea|undefine|defpage|dephase|display|ifnused|savebin|savecdt|savecpr|savedev|savehex|savehob|savenex|savesna|savetap|savetrd|unphase|winexec|abytec|abytez|ascmap|assert|binary|bplist|define|device|elseif|endlua|endmap|endmod|export|hexend|hexout|ifdifi|ifidni|ifndef|ifnnum|ifnstr|ifused|incbin|inchob|inctrd|insert|module|outend|output|repeat|rotate|sldopt|struct|tapend|tapout|update|abyte|align|block|dword|endif|error|field|ifdef|ifdif|ifidn|ifini|ifnid|ifnum|ifstr|macro|phase|setbp|while|byte|code|defb|defd|defl|defm|defp|defs|defw|disp|edup|else|endm|endr|ends|endt|endw|fpos|ifid|ifin|ifnb|page|rept|size|slot|text|word|d24|dup|end|ent|equ|ifb|ifn|map|mmu|opt|org|db|dc|dd|dm|dp|ds|dt|dw|dz|if)\\b)|\\.(?:defg|defh|dg|dh|hex|include|lua)\\b))",
+     "captures": {
+      "1": {
+       "name": "entity.name.function.z80asm"
+      },
+      "2": {
+       "name": "entity.name.function.z80asm"
+      },
+      "3": {
+       "name": "keyword.control.repeat.z80asm"
+      },
+      "4": {
+       "name": "keyword.control.z80asm"
+      }
+     }
+    },
+    {
+     "match": "(?i:(?<=:)\\s*((?:\\.(?:\\d+|\\([^)\\n]*\\))\\s+)*)(\\.?(?:(?:define|defarray)\\+(?=\\s)|(?:relocate_start|relocate_table|setbreakpoint|relocate_end|includelua|labelslist|saveamsdos|savecpcsna|cspectmap|defdevice|endmodule|endrepeat|endstruct|exitmacro|ifnexists|memorymap|shellexec|defarray|emptytap|emptytrd|encoding|endmacro|endwhile|ifexists|save3dos|textarea|undefine|defpage|dephase|display|ifnused|savebin|savecdt|savecpr|savedev|savehex|savehob|savenex|savesna|savetap|savetrd|unphase|winexec|abytec|abytez|ascmap|assert|binary|bplist|define|device|elseif|endlua|endmap|endmod|export|hexend|hexout|ifdifi|ifidni|ifndef|ifnnum|ifnstr|ifused|incbin|inchob|inctrd|insert|module|outend|output|repeat|rotate|sldopt|struct|tapend|tapout|update|abyte|align|block|dword|endif|error|field|ifdef|ifdif|ifidn|ifini|ifnid|ifnum|ifstr|macro|phase|setbp|while|byte|code|defb|defd|defl|defm|defp|defs|defw|disp|edup|else|endm|endr|ends|endt|endw|fpos|ifid|ifin|ifnb|page|rept|size|slot|text|word|d24|dup|end|ent|equ|ifb|ifn|map|mmu|opt|org|db|dc|dd|dm|dp|ds|dt|dw|dz|if)\\b)|\\.(?:defg|defh|dg|dh|hex|include|lua)\\b))",
+     "captures": {
+      "1": {
+       "name": "keyword.control.repeat.z80asm"
+      },
+      "2": {
+       "name": "keyword.control.z80asm"
+      }
+     }
+    },
+    {
+     "match": "^(?:(?:\\s*>)?([@!]?\\.?[A-Za-z_][\\w.!?#@]*|\\d+)(\\+[\\d*])?:?)?\\s+(\\[[^\\]\\n]*\\])(?=\\s)",
+     "captures": {
+      "1": {
+       "name": "entity.name.function.z80asm"
+      },
+      "2": {
+       "name": "entity.name.function.z80asm"
+      },
+      "3": {
+       "name": "keyword.control.repeat.z80asm"
+      }
+     }
     }
    ]
   },
