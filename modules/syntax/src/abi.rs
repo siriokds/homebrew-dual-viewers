@@ -245,7 +245,7 @@ mod tests {
     fn through_the_c_functions() {
         let plugin = unsafe { &*dual_viewer_plugin_load().cast::<Plugin>() };
         assert_eq!((plugin.info.api_vmajor, plugin.info.api_vminor), (1, 2));
-        assert_eq!((plugin.info.version_major, plugin.info.version_minor), (1, 1));
+        assert_eq!((plugin.info.version_major, plugin.info.version_minor), (1, 2));
         let ops = &plugin.ops;
         unsafe {
             let this = (ops.create)();
