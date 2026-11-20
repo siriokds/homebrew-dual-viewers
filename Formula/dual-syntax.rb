@@ -6,7 +6,7 @@ class DualSyntax < Formula
   # Il modulo e' in Rust (tree-sitter e le grammatiche, dentro la dylib):
   # Rust serve solo per compilare, e con la bottle nemmeno quello.
   url "https://github.com/siriokds/homebrew-dual-viewers.git", branch: "main"
-  version "1.1.0"
+  version "1.2.0"
   license "GPL-3.0-or-later"
 
   # Il plugin gia' compilato (bottle, docs/bottle.md di Dual Rust): chi
