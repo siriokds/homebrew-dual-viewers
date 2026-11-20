@@ -12,8 +12,8 @@ class DualSyntax < Formula
   # Il plugin gia' compilato (bottle, docs/bottle.md di Dual Rust): chi
   # installa non compila e non ha bisogno di Rust.
   bottle do
-    root_url "https://github.com/siriokds/homebrew-dual-viewers/releases/download/dual-syntax-1.1.0"
-    sha256 cellar: :any, arm64_golden_gate: "8129025041f755d9170077f6cc9b8cb531c21b12cc6d7f800101d344f155f4bb"
+    root_url "https://github.com/siriokds/homebrew-dual-viewers/releases/download/dual-syntax-1.2.0"
+    sha256 cellar: :any, arm64_golden_gate: "fbbfc4b6d139824c4a9b18d9cbd18eef87f3aed9945b1106dc2d78b808e12426"
   end
 
   # Stessa convenzione degli altri moduli dual-*: Dual cerca in
